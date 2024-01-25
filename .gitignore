@@ -1,2 +1,4 @@
 /target
 Cargo.lock
+c_src_files/*
+config_files/*
