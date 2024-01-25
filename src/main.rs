@@ -4,6 +4,7 @@ use analyze::*;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead};
+use std::sync::{Arc, Mutex};
 
 // 依存関係解析のための関数や構造体をここに定義する
 // ...
@@ -29,7 +30,10 @@ fn main() {
     let source_code = fs::read_to_string(&c_source_file)
         .expect("Failed to read C source file");
 
-    let call_graph = generate_call_graph(&source_code, &target_function, depth);
-    output_yaml(&call_graph);
+        let root = Arc::new(Mutex::new(FunctionNode::new(target_function)));
+        let root_clone = Arc::clone(&root);
+        generate_call_graph(&source_code, depth, root_clone);
+        let root_clone2 = Arc::clone(&root);
+        output_yaml(root_clone2);
 }
 
