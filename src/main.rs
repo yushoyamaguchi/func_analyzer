@@ -1,3 +1,6 @@
+mod analyze;
+
+use analyze::*;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead};
@@ -5,23 +8,7 @@ use std::io::{self, BufRead};
 // 依存関係解析のための関数や構造体をここに定義する
 // ...
 
-struct FunctionCall {
-    caller: String,
-    callee: String,
-}
 
-
-// Call Graphを生成するための関数
-fn generate_call_graph(source: &str, target_function: &str, depth: usize) -> Vec<FunctionCall> {
-    // Cソースコードを解析してCall Graphを構築するロジックをここに実装
-    vec![] // この部分は実際のロジックに置き換える
-}
-
-// Call GraphをYAML形式で出力する関数
-fn output_yaml(call_graph: &[FunctionCall]) {
-    // YAML形式での出力ロジックをここに実装
-    print!("output_yaml() is not implemented yet");
-}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
