@@ -11,28 +11,42 @@ pub struct FunctionNode {
 
 pub struct Parser {
     fn_hash: Mutex<HashMap<String, usize>>,
+    pub source: Vec<String>,
 }
 
 impl Parser {
     pub fn new() -> Parser {
         Parser {
             fn_hash: Mutex::new(HashMap::new()),
+            source: Vec::new(),
         }
+    }
+
+    fn is_function_definition(&mut self, lines: &[&str], index: usize, fn_name: &str) -> bool {
+        if index + 1 >= lines.len() {
+            return false;
+        }
+    
+        let current_line = lines[index].trim();
+        let next_line = lines[index + 1].trim();
+    
+        current_line.contains(&format!("{}(", fn_name)) && current_line.contains(")") && next_line == "{"
     }
 
     // nameの関数の中身を調べて、そこから呼び出してる関数を子として登録する
     // 子のノードに対しては,nameとcurr_depthだけ設定する
     // 他のノードとの子の重複はとりあえずチェックしない
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
-    fn parse_c_fn(&mut self, source: &Vec<&str>, fn_node: &Arc<Mutex<FunctionNode>>) {
+    fn parse_c_fn(&mut self, fn_node: &Arc<Mutex<FunctionNode>>) {
         let fn_name = fn_node.lock().unwrap().name.clone();
         let mut fn_hash = self.fn_hash.lock().unwrap();
 
         if let Some(&line) = fn_hash.get(&fn_name) {
             println!("Function '{}' found in line {}", fn_name, line);
         } else {
-            for (i, line) in source.iter().enumerate() {
-                if line.contains(&format!("{}(", fn_name)) {
+            for (i, line) in self.source.iter().enumerate() {
+                //if self.is_function_definition(source, i, &fn_name) {
+                if 1==1 {    
                     println!("Function '{}' found in line {}", fn_name, i + 1);
                     fn_hash.insert(fn_name, i + 1);
                     break;
@@ -41,6 +55,35 @@ impl Parser {
         }
     }
 
+    fn find_child(&mut self, source: &Vec<&str>, fn_node: &Arc<Mutex<FunctionNode>>, line: i64) {
+        // line行目から始まる関数において、呼び出してる関数を子として登録する
+        // 子のノードに対しては,nameとcurr_depthだけ設定する
+
+        
+    }
+
+    // まずは深さチェック
+    // 次に自分の関数があるかチェックして、あれば自分が呼び出してる関数を子として全て格納
+    // 全ての子に対して再帰的にこの関数を呼び出す
+    fn search_c_fn(&mut self, depth:i64, fn_node: &Arc<Mutex<FunctionNode>>) {
+        let fn_node_locked = fn_node.lock().unwrap();
+        if depth == fn_node_locked.curr_depth {
+            return;
+        }
+        self.parse_c_fn(&fn_node);
+        // 子に対して再帰的にこの関数を呼び出す
+        let fn_node_locked = fn_node.lock().unwrap();
+        for child in fn_node_locked.calls.iter() {
+            self.search_c_fn(depth, &Arc::clone(child));
+        }
+    }
+
+    // Call Graphを生成するための関数
+    pub fn generate_call_graph(&mut self, depth: i64, root: Arc<Mutex<FunctionNode>>)  {
+        let depth = depth;
+        self.search_c_fn(depth, &root);
+        
+    }
 
 }
 
@@ -56,33 +99,6 @@ impl FunctionNode {
     }
 }
 
-
-
-
-// まずは深さチェック
-// 次に自分の関数があるかチェックして、あれば自分が呼び出してる関数を子として全て格納
-// 全ての子に対して再帰的にこの関数を呼び出す
-fn search_c_fn(source: &Vec<&str>, depth:i64, fn_node: &Arc<Mutex<FunctionNode>>, parser: &mut Parser) {
-    let fn_node_locked = fn_node.lock().unwrap();
-    if depth == fn_node_locked.curr_depth {
-        return;
-    }
-    parser.parse_c_fn(source, &fn_node);
-    // 子に対して再帰的にこの関数を呼び出す
-    let fn_node_locked = fn_node.lock().unwrap();
-    for child in fn_node_locked.calls.iter() {
-        search_c_fn(source, depth, &Arc::clone(child), parser);
-    }
-}
-
-
-// Call Graphを生成するための関数
-pub fn generate_call_graph(source: &Vec<&str>, depth: i64, root: Arc<Mutex<FunctionNode>>, parser: &mut Parser)  {
-    let src_c_file = source;
-    let depth = depth;
-    search_c_fn(source, depth, &root, parser);
-    
-}
 
 
 

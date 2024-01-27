@@ -36,14 +36,14 @@ fn main() {
             Err(e) => println!("Error reading line: {}", e),
         }
     }
-    let  c_src_lines: Vec<&str> = temp_lines.iter().map(AsRef::as_ref).collect();
 
 
     // Call Graphを生成するための処理を呼び出す
     let mut parser = Parser::new();
+    parser.source = temp_lines.clone();
     let root = Arc::new(Mutex::new(FunctionNode::new(target_function)));
     let root_clone = Arc::clone(&root);
-    generate_call_graph(&c_src_lines, depth, root_clone, &mut parser);
+    parser.generate_call_graph(depth, root_clone);
     let root_clone2 = Arc::clone(&root);
     output_yaml(root_clone2);
 }
