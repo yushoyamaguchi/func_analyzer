@@ -40,9 +40,10 @@ fn main() {
 
 
     // Call Graphを生成するための処理を呼び出す
+    let mut parser = Parser::new();
     let root = Arc::new(Mutex::new(FunctionNode::new(target_function)));
     let root_clone = Arc::clone(&root);
-    generate_call_graph(&c_src_lines, depth, root_clone);
+    generate_call_graph(&c_src_lines, depth, root_clone, &mut parser);
     let root_clone2 = Arc::clone(&root);
     output_yaml(root_clone2);
 }
