@@ -10,13 +10,13 @@ pub struct FunctionNode {
 }
 
 pub struct Parser {
-    fn_hash: HashMap<String, usize>,
+    fn_hash: Mutex<HashMap<String, usize>>,
 }
 
 impl Parser {
     pub fn new() -> Parser {
         Parser {
-            fn_hash: HashMap::new(),
+            fn_hash: Mutex::new(HashMap::new()),
         }
     }
 
@@ -25,8 +25,20 @@ impl Parser {
     // 他のノードとの子の重複はとりあえずチェックしない
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
     fn parse_c_fn(&mut self, source: &Vec<&str>, fn_node: &Arc<Mutex<FunctionNode>>) {
-        // C言語の関数をパースするロジックをここに実装
-        print!("parse_c_fn() is not implemented yet");
+        let fn_name = fn_node.lock().unwrap().name.clone();
+        let mut fn_hash = self.fn_hash.lock().unwrap();
+
+        if let Some(&line) = fn_hash.get(&fn_name) {
+            println!("Function '{}' found in line {}", fn_name, line);
+        } else {
+            for (i, line) in source.iter().enumerate() {
+                if line.contains(&format!("{}(", fn_name)) {
+                    println!("Function '{}' found in line {}", fn_name, i + 1);
+                    fn_hash.insert(fn_name, i + 1);
+                    break;
+                }
+            }
+        }
     }
 
 
