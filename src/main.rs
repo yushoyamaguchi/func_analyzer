@@ -6,9 +6,6 @@ use std::fs;
 use std::io::{self, BufRead};
 use std::sync::{Arc, Mutex};
 
-// 依存関係解析のための関数や構造体をここに定義する
-// ...
-
 
 
 fn main() {
@@ -25,7 +22,7 @@ fn main() {
     let c_source_file = lines.next().expect("Expected C source file path").expect("Failed to read line");
     let target_function = lines.next().expect("Expected target function name").expect("Failed to read line");
     let depth_str = lines.next().expect("Expected depth").expect("Failed to read line");
-    let depth: usize = depth_str.parse().expect("Depth must be a number");
+    let depth: i64 = depth_str.parse().expect("Depth must be a number");
 
     let source_code = fs::read_to_string(&c_source_file)
         .expect("Failed to read C source file");
