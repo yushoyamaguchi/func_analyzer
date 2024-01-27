@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::cell::RefCell;
 
 
 pub struct FunctionNode {
@@ -10,25 +11,25 @@ pub struct FunctionNode {
 }
 
 pub struct Parser {
-    fn_hash: Mutex<HashMap<String, usize>>,
+    fn_hash: RefCell<HashMap<String, usize>>,
     pub source: Vec<String>,
 }
 
 impl Parser {
     pub fn new() -> Parser {
         Parser {
-            fn_hash: Mutex::new(HashMap::new()),
+            fn_hash: RefCell::new(HashMap::new()),
             source: Vec::new(),
         }
     }
 
-    fn is_function_definition(&mut self, lines: &[&str], index: usize, fn_name: &str) -> bool {
-        if index + 1 >= lines.len() {
+    fn is_function_definition(&self, index: usize, fn_name: &str) -> bool {
+        if index + 1 >= self.source.len() {
             return false;
         }
     
-        let current_line = lines[index].trim();
-        let next_line = lines[index + 1].trim();
+        let current_line = self.source[index].trim();
+        let next_line = self.source[index + 1].trim();
     
         current_line.contains(&format!("{}(", fn_name)) && current_line.contains(")") && next_line == "{"
     }
@@ -39,14 +40,14 @@ impl Parser {
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
     fn parse_c_fn(&mut self, fn_node: &Arc<Mutex<FunctionNode>>) {
         let fn_name = fn_node.lock().unwrap().name.clone();
-        let mut fn_hash = self.fn_hash.lock().unwrap();
+        let mut fn_hash = self.fn_hash.borrow_mut();
+
 
         if let Some(&line) = fn_hash.get(&fn_name) {
             println!("Function '{}' found in line {}", fn_name, line);
         } else {
             for (i, line) in self.source.iter().enumerate() {
-                //if self.is_function_definition(source, i, &fn_name) {
-                if 1==1 {    
+                if self.is_function_definition(i, &fn_name) {  
                     println!("Function '{}' found in line {}", fn_name, i + 1);
                     fn_hash.insert(fn_name, i + 1);
                     break;
