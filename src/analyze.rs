@@ -25,6 +25,7 @@ impl FunctionNode {
 pub struct Parser {
     fn_hash: RefCell<HashMap<String, i64>>,
     pub source: Vec<String>,
+    pub root: Arc<Mutex<FunctionNode>>,
 }
 
 impl Parser {
@@ -72,6 +73,31 @@ impl Parser {
             }
         }
         self.find_child(fn_node, fn_line);
+    }
+
+    fn parse_c_root_fn(&mut self) {
+        //let fn_name = fn_node.lock().unwrap().name.clone();
+        let fn_name=self.root.lock().unwrap().name.clone();
+        let mut fn_line:i64 = 0;
+        {
+            let mut fn_hash = self.fn_hash.borrow_mut();
+
+
+            if let Some(&line) = fn_hash.get(&fn_name) {
+                println!("Function '{}' found in line {}", fn_name, line);
+                fn_line = line;
+            } else {
+                for (i, line) in self.source.iter().enumerate() {
+                    if self.is_function_definition(i, &fn_name) {  
+                        println!("Function '{}' found in line {}", fn_name, i );
+                        fn_hash.insert(fn_name, i as i64);
+                        fn_line = i as i64;
+                        break;
+                    }
+                }
+            }
+        }
+        self.find_child(&self.root, fn_line);
     }
 
     fn find_child(&mut self, fn_node: &Arc<Mutex<FunctionNode>>, line: i64) {
