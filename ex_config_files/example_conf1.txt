@@ -1,3 +1,3 @@
-c_src_files/example.c
+ex_c_src_files/example.c
 fnA
 0
