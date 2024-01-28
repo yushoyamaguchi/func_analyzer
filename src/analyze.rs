@@ -58,12 +58,10 @@ impl Parser {
 
 
             if let Some(&line) = fn_hash.get(&fn_name) {
-                println!("Function '{}' found in line {}", fn_name, line);
                 fn_line = line;
             } else {
                 for (i, _line) in self.source.iter().enumerate() {
                     if self.is_function_definition(i, &fn_name) {  
-                        println!("Function '{}' found in line {}", fn_name, i );
                         fn_hash.insert(fn_name, i as i64);
                         fn_line = i as i64;
                         break;
