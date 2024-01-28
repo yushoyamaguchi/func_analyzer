@@ -7,7 +7,6 @@ pub struct FunctionNode {
     name: String,
     calls: Vec<Arc<Mutex<FunctionNode>>>,
     curr_depth: i64,
-    is_existed: bool,
 }
 
 impl FunctionNode {
@@ -16,7 +15,6 @@ impl FunctionNode {
             name,
             calls: vec![],
             curr_depth: 0,
-            is_existed: false,
         }
     }
 }
@@ -25,13 +23,15 @@ impl FunctionNode {
 pub struct Parser {
     fn_hash: RefCell<HashMap<String, i64>>,
     pub source: Vec<String>,
+    pub root: Arc<Mutex<FunctionNode>>,
 }
 
 impl Parser {
-    pub fn new() -> Parser {
+    pub fn new(root_fn_name:String) -> Parser {
         Parser {
             fn_hash: RefCell::new(HashMap::new()),
             source: Vec::new(),
+            root: Arc::new(Mutex::new(FunctionNode::new(root_fn_name))),
         }
     }
 
@@ -58,12 +58,10 @@ impl Parser {
 
 
             if let Some(&line) = fn_hash.get(&fn_name) {
-                println!("Function '{}' found in line {}", fn_name, line);
                 fn_line = line;
             } else {
-                for (i, line) in self.source.iter().enumerate() {
+                for (i, _line) in self.source.iter().enumerate() {
                     if self.is_function_definition(i, &fn_name) {  
-                        println!("Function '{}' found in line {}", fn_name, i );
                         fn_hash.insert(fn_name, i as i64);
                         fn_line = i as i64;
                         break;
@@ -73,6 +71,7 @@ impl Parser {
         }
         self.find_child(fn_node, fn_line);
     }
+
 
     fn find_child(&mut self, fn_node: &Arc<Mutex<FunctionNode>>, line: i64) {
         // line行目から始まる関数において、呼び出してる関数を子として登録する
@@ -98,9 +97,10 @@ impl Parser {
     }
 
     // Call Graphを生成するための関数
-    pub fn generate_call_graph(&mut self, depth: i64, root: Arc<Mutex<FunctionNode>>)  {
+    pub fn generate_call_graph(&mut self, depth: i64)  {
         let depth = depth;
-        self.search_c_fn(depth, &root);
+        let root_clone = Arc::clone(&self.root);
+        self.search_c_fn(depth, &root_clone);
         
     }
 
@@ -111,7 +111,7 @@ impl Parser {
 
 
 // Call GraphをYAML形式で出力する関数
-pub fn output_yaml(root: Arc<Mutex<FunctionNode>>) {
+pub fn output_yaml(_root: Arc<Mutex<FunctionNode>>) {
     // YAML形式での出力ロジックをここに実装
     print!("output_yaml() is not implemented yet");
 }
