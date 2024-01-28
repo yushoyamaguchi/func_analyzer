@@ -7,7 +7,6 @@ pub struct FunctionNode {
     name: String,
     calls: Vec<Arc<Mutex<FunctionNode>>>,
     curr_depth: i64,
-    is_existed: bool,
 }
 
 impl FunctionNode {
@@ -16,7 +15,6 @@ impl FunctionNode {
             name,
             calls: vec![],
             curr_depth: 0,
-            is_existed: false,
         }
     }
 }
@@ -63,7 +61,7 @@ impl Parser {
                 println!("Function '{}' found in line {}", fn_name, line);
                 fn_line = line;
             } else {
-                for (i, line) in self.source.iter().enumerate() {
+                for (i, _line) in self.source.iter().enumerate() {
                     if self.is_function_definition(i, &fn_name) {  
                         println!("Function '{}' found in line {}", fn_name, i );
                         fn_hash.insert(fn_name, i as i64);
@@ -115,7 +113,7 @@ impl Parser {
 
 
 // Call GraphをYAML形式で出力する関数
-pub fn output_yaml(root: Arc<Mutex<FunctionNode>>) {
+pub fn output_yaml(_root: Arc<Mutex<FunctionNode>>) {
     // YAML形式での出力ロジックをここに実装
     print!("output_yaml() is not implemented yet");
 }
