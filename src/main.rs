@@ -4,7 +4,7 @@ use analyze::*;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 
 
@@ -23,7 +23,7 @@ fn main() {
     let c_source_file = lines.next().expect("Expected C source file path").expect("Failed to read line");
     let target_function = lines.next().expect("Expected target function name").expect("Failed to read line");
     let depth_str = lines.next().expect("Expected depth").expect("Failed to read line");
-    let depth: i64 = depth_str.parse().expect("Depth must be a number");
+    let depth: usize = depth_str.parse().expect("Depth must be a number");
 
 
     // C言語のソースファイルを読み込んで処理する
@@ -41,9 +41,8 @@ fn main() {
     // Call Graphを生成するための処理を呼び出す
     let mut parser = Parser::new(target_function.clone());
     parser.source = temp_lines.clone();
-    let root = Arc::new(Mutex::new(FunctionNode::new(target_function)));
     parser.generate_call_graph(depth);
-    let root_clone2 = Arc::clone(&root);
+    let root_clone2 = Arc::clone(&parser.root);
     output_yaml(root_clone2);
 }
 
