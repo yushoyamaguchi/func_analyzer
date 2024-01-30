@@ -158,7 +158,7 @@ impl Parser {
                 let fn_name_clone = fn_name.clone();
                 let curr_depth_buf = fn_node_locked.curr_depth;
                 fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
-                println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
+                //println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
             }
     
             curr_line += 1;

@@ -48,6 +48,7 @@ fn main() {
 
 
     // Call Graphを生成するための処理を呼び出す
+    fs::create_dir_all("yaml_output").expect("Failed to create yaml_output directory");
     let output_file_name = match output_file {
         Some(name) => format!("yaml_output/{}", name),
         None => "yaml_output/call_graph.yaml".to_string(),
