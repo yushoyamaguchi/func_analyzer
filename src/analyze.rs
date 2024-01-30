@@ -128,7 +128,7 @@ impl Parser {
             self.fn_brackets_count += 1;
             curr_line += 1;
         } else {
-            println!("Error: {} line is not {{", curr_line);
+            println!("{} is not implemented in this source code", fn_node.borrow().name);
             return;
         }
         // curr_line行目から順番にfind_fn_call()を使用して関数呼び出しを探す
@@ -150,8 +150,10 @@ impl Parser {
             if let Some(fn_name) = self.find_fn_call(curr_line) {
                 // fn_nodeのロックを取得して子ノードを追加
                 let mut fn_node_locked = fn_node.borrow_mut();
+                let fn_name_clone = fn_name.clone();
                 let curr_depth_buf = fn_node_locked.curr_depth;
                 fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
+                println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
             }
     
             curr_line += 1;
@@ -165,7 +167,6 @@ impl Parser {
     fn search_c_fn(&mut self, depth:usize, fn_node: &Rc<RefCell<FunctionNode>>) {
         {
             let fn_node_locked = fn_node.borrow_mut();
-            println!("fn_name: {}, curr_depth: {}", fn_node_locked.name, fn_node_locked.curr_depth);
             if depth == fn_node_locked.curr_depth {
                 return;
             }
