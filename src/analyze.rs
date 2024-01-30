@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::fs::File;
+use std::io::{Write, Result};
 
 
 pub struct FunctionNode {
@@ -28,6 +30,7 @@ pub struct Parser {
     pub source: Vec<String>,
     pub root: Rc<RefCell<FunctionNode>>,
     fn_brackets_count: usize,
+    yaml_file_path: String,
 }
 
 impl Parser {
@@ -37,6 +40,7 @@ impl Parser {
             source: Vec::new(),
             root: Rc::new(RefCell::new(FunctionNode::new(root_fn_name, 0))),
             fn_brackets_count: 0,
+            yaml_file_path: "yaml_output/call_graph.yaml".to_string(), // デフォルトの出力先はyaml_output/call_graph.yaml
         }
     }
 
@@ -187,9 +191,39 @@ impl Parser {
         self.search_c_fn(depth, &root_clone);
     }
 
+    #[allow(dead_code)]
+    fn print_node_test(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
+        let fn_node_locked = fn_node.borrow_mut();
+        println!("name={}, curr_depth={}", fn_node_locked.name, fn_node_locked.curr_depth);
+        for child in fn_node_locked.calls.iter() {
+            self.print_node_test(&Rc::clone(child));
+        }
+    }
+
+    pub fn write_yaml(&mut self) -> Result<()> {
+        let file_path = self.yaml_file_path.clone();
+        let file = File::create(file_path)?;
+        let mut writer = std::io::BufWriter::new(file);
+
+        self.write_node_yaml(&mut writer, &self.root, 0)
+    }
+
+    fn write_node_yaml(&self, writer: &mut impl Write, fn_node: &Rc<RefCell<FunctionNode>>, depth: usize) -> Result<()> {
+        let fn_node_locked = fn_node.borrow();
+        writeln!(writer, "{}{}: {}()", " ".repeat(depth * 4), fn_node_locked.curr_depth,fn_node_locked.name)?;
+        
+        for child in fn_node_locked.calls.iter() {
+            self.write_node_yaml(writer, &Rc::clone(child), depth + 1)?;
+        }
+
+        Ok(())
+    }
+
     pub fn output_yaml(&mut self) {
-        // YAML形式での出力ロジックをここに実装
-        println!("output_yaml() is not implemented yet");
+        /*// rootから順番に出力する
+        let root_clone = Rc::clone(&self.root);
+        self.print_node_test(&root_clone);*/
+        self.write_yaml().expect("Failed to write YAML");
     }
 
 }
