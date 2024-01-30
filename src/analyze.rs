@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::cell::RefCell;
+use std::rc::Rc;
+use std::cell::{Ref, RefCell};
 
 
 pub struct FunctionNode {
     name: String,
-    calls: Vec<Arc<Mutex<FunctionNode>>>,
+    calls: Vec<Rc<RefCell<FunctionNode>>>,
     curr_depth: usize,
 }
 
@@ -18,7 +19,7 @@ impl FunctionNode {
         }
     }
     fn add_child(&mut self, child: FunctionNode) {
-        self.calls.push(Arc::new(Mutex::new(child)));
+        self.calls.push(Rc::new(RefCell::new(child)));
     }
 }
 
@@ -26,7 +27,7 @@ impl FunctionNode {
 pub struct Parser {
     fn_hash: RefCell<HashMap<String, usize>>,
     pub source: Vec<String>,
-    pub root: Arc<Mutex<FunctionNode>>,
+    pub root: Rc<RefCell<FunctionNode>>,
     fn_brackets_count: usize,
 }
 
@@ -35,7 +36,7 @@ impl Parser {
         Parser {
             fn_hash: RefCell::new(HashMap::new()),
             source: Vec::new(),
-            root: Arc::new(Mutex::new(FunctionNode::new(root_fn_name, 0))),
+            root: Rc::new(RefCell::new(FunctionNode::new(root_fn_name, 0))),
             fn_brackets_count: 0,
         }
     }
@@ -55,8 +56,8 @@ impl Parser {
     // 子のノードに対しては,nameとcurr_depthだけ設定する
     // 他のノードとの子の重複はとりあえずチェックしない
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
-    fn parse_c_fn(&mut self, fn_node: &Arc<Mutex<FunctionNode>>) {
-        let fn_name = fn_node.lock().unwrap().name.clone();
+    fn parse_c_fn(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
+        let fn_name = fn_node.borrow().name.clone();
         let mut fn_line:usize = 0;
         {
             let mut fn_hash = self.fn_hash.borrow_mut();
@@ -118,7 +119,7 @@ impl Parser {
         None
     }
 
-    fn find_child(&mut self, fn_node: &Arc<Mutex<FunctionNode>>, line: usize) {
+    fn find_child(&mut self, fn_node: &Rc<RefCell<FunctionNode>>, line: usize) {
         // line行目から始まる関数において、呼び出してる関数を子として登録する
         // 子のノードに対しては,nameとcurr_depthだけ設定する
 
@@ -149,7 +150,7 @@ impl Parser {
             // 関数呼び出しのチェック
             if let Some(fn_name) = self.find_fn_call(curr_line) {
                 // fn_nodeのロックを取得して子ノードを追加
-                let mut fn_node_locked = fn_node.lock().unwrap();
+                let mut fn_node_locked = fn_node.borrow_mut();
                 let curr_depth_buf = fn_node_locked.curr_depth;
                 fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
             }
@@ -162,24 +163,25 @@ impl Parser {
     // まずは深さチェック
     // 次に自分の関数があるかチェックして、あれば自分が呼び出してる関数を子として全て格納
     // 全ての子に対して再帰的にこの関数を呼び出す
-    fn search_c_fn(&mut self, depth:usize, fn_node: &Arc<Mutex<FunctionNode>>) {
-        let fn_node_locked = fn_node.lock().unwrap();
+    fn search_c_fn(&mut self, depth:usize, fn_node: &Rc<RefCell<FunctionNode>>) {
+        let fn_node_locked = fn_node.borrow_mut();
         println!("serch_c_fn: {} depth: {}", fn_node_locked.name, fn_node_locked.curr_depth);
         if depth == fn_node_locked.curr_depth {
             return;
         }
-        self.parse_c_fn(&fn_node);
+        self.parse_c_fn(fn_node);
         // 子に対して再帰的にこの関数を呼び出す
-        let fn_node_locked = fn_node.lock().unwrap();
+        let fn_node_locked = fn_node.borrow_mut();
         for child in fn_node_locked.calls.iter() {
-            self.search_c_fn(depth, &Arc::clone(child));
+            self.search_c_fn(depth, &Rc::clone(child));
         }
     }
 
     // Call Graphを生成するための関数
     pub fn generate_call_graph(&mut self, depth: usize)  {
         let depth = depth;
-        let root_clone = Arc::clone(&self.root);
+        let root_clone = Rc::clone(&self.root);
+        // cloneでいいのかチェック
         self.search_c_fn(depth, &root_clone);
         
     }
@@ -191,7 +193,7 @@ impl Parser {
 
 
 // Call GraphをYAML形式で出力する関数
-pub fn output_yaml(_root: Arc<Mutex<FunctionNode>>) {
+pub fn output_yaml(_root: Rc<RefCell<FunctionNode>>) {
     // YAML形式での出力ロジックをここに実装
     print!("output_yaml() is not implemented yet");
 }
