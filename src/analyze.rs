@@ -128,7 +128,7 @@ impl Parser {
             self.fn_brackets_count += 1;
             curr_line += 1;
         } else {
-            println!("{} is not implemented in this source code", fn_node.borrow().name);
+            println!("line={} , {}() is not implemented in this source code",line, fn_node.borrow().name);
             return;
         }
         // curr_line行目から順番にfind_fn_call()を使用して関数呼び出しを探す
