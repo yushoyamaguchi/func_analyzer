@@ -4,7 +4,6 @@ use analyze::*;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead};
-use std::rc::Rc;
 
 
 
@@ -41,7 +40,6 @@ fn main() {
     let mut parser = Parser::new(target_function.clone());
     parser.source = temp_lines.clone();
     parser.generate_call_graph(depth);
-    let root_clone2 = Rc::clone(&parser.root);
-    output_yaml(root_clone2);
+    parser.output_yaml();
 }
 

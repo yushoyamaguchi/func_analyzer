@@ -187,14 +187,11 @@ impl Parser {
         self.search_c_fn(depth, &root_clone);
     }
 
+    pub fn output_yaml(&mut self) {
+        // YAML形式での出力ロジックをここに実装
+        println!("output_yaml() is not implemented yet");
+    }
+
 }
 
 
-
-
-
-// Call GraphをYAML形式で出力する関数
-pub fn output_yaml(_root: Rc<RefCell<FunctionNode>>) {
-    // YAML形式での出力ロジックをここに実装
-    println!("output_yaml() is not implemented yet");
-}
