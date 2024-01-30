@@ -106,6 +106,8 @@ impl Parser {
         false
     }
 
+    // if/for/whileの条件式の中に関数呼び出しがあるかチェック
+    // 正規表現を使用している
     fn is_fn_call_condition(&mut self, line: usize) -> bool {
         let line_content = self.source[line].trim();
         // if/for/whileの条件式の中に関数呼び出しがあるかチェック
@@ -131,8 +133,13 @@ impl Parser {
             }
         }
         // if/for/whileの条件式の中に関数呼び出しがある場合、その関数呼び出しを取得する
-        if self.is_fn_call_condition(line){
-
+        // 最初にマッチした関数呼び出ししか取得できない
+        if self.is_fn_call_condition(line) {
+            let line_content = self.source[line].trim();
+            let re = Regex::new(r"(\w+)\s*\(").unwrap(); // 関数名を検出する正規表現
+            if let Some(caps) = re.captures(line_content) {
+                return caps.get(1).map(|m| m.as_str().to_string());
+            }
         }
 
         None
@@ -171,8 +178,8 @@ impl Parser {
                 // fn_nodeのロックを取得して子ノードを追加
                 let mut fn_node_locked = fn_node.borrow_mut();
                 let curr_depth_buf = fn_node_locked.curr_depth;
-                /*let fn_name_clone = fn_name.clone();
-                println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);*/
+                let fn_name_clone = fn_name.clone();
+                println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
                 fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
             }
     
