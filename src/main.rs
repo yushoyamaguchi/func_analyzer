@@ -43,6 +43,6 @@ fn main() {
     parser.source = temp_lines.clone();
     parser.generate_call_graph(depth);
     let root_clone2 = Rc::clone(&parser.root);
-    //output_yaml(root_clone2);
+    output_yaml(root_clone2);
 }
 
