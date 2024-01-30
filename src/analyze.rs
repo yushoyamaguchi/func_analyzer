@@ -135,6 +135,7 @@ impl Parser {
         // if/for/whileの条件式の中に関数呼び出しがある場合、その関数呼び出しを取得する
         // 最初にマッチした関数呼び出ししか取得できない
         if self.is_fn_call_condition(line) {
+            println!("in conditional statement");
             let line_content = self.source[line].trim();
             let re = Regex::new(r"(\w+)\s*\(").unwrap(); // 関数名を検出する正規表現
             if let Some(caps) = re.captures(line_content) {
