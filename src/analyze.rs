@@ -3,6 +3,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::{Write, Result};
+use regex::Regex;
 
 
 pub struct FunctionNode {
@@ -104,6 +105,15 @@ impl Parser {
         }
         false
     }
+
+    fn is_fn_call_condition(&mut self, line: usize) -> bool {
+        let line_content = self.source[line].trim();
+        // if/for/whileの条件式の中に関数呼び出しがあるかチェック
+        let re = Regex::new(r"(if|while|for)\s*\(([^)]*)\)").unwrap();
+        re.captures(line_content)
+            .map(|caps| caps.get(2).map_or(false, |m| m.as_str().contains('(') && m.as_str().contains(')')))
+            .unwrap_or(false)
+    }
     
 
     fn find_fn_call(&mut self, line: usize)->Option<String> {
@@ -120,6 +130,11 @@ impl Parser {
                 }
             }
         }
+        // if/for/whileの条件式の中に関数呼び出しがある場合、その関数呼び出しを取得する
+        if self.is_fn_call_condition(line){
+
+        }
+
         None
     }
 
