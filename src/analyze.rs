@@ -155,10 +155,10 @@ impl Parser {
             if let Some(fn_name) = self.find_fn_call(curr_line) {
                 // fn_nodeのロックを取得して子ノードを追加
                 let mut fn_node_locked = fn_node.borrow_mut();
-                let fn_name_clone = fn_name.clone();
                 let curr_depth_buf = fn_node_locked.curr_depth;
+                /*let fn_name_clone = fn_name.clone();
+                println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);*/
                 fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
-                //println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
             }
     
             curr_line += 1;
