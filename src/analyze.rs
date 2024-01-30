@@ -57,24 +57,25 @@ impl Parser {
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
     fn parse_c_fn(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
         let fn_name = fn_node.borrow().name.clone();
-        let mut fn_line:usize = 0;
+        let mut fn_line:i64 = -1;
         {
             let mut fn_hash = self.fn_hash.borrow_mut();
 
-
             if let Some(&line) = fn_hash.get(&fn_name) {
-                fn_line = line;
+                fn_line = line as i64;
             } else {
                 for (i, _line) in self.source.iter().enumerate() {
                     if self.is_function_definition(i, &fn_name) {  
                         fn_hash.insert(fn_name, i );
-                        fn_line = i ;
+                        fn_line = i as i64;
                         break;
                     }
                 }
             }
         }
-        self.find_child(fn_node, fn_line);
+        if fn_line != -1 {
+            self.find_child(fn_node, fn_line as usize);
+        }
     }
 
     fn is_fn_call_line(&self, line: usize) -> bool {
