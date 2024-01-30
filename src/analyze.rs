@@ -164,6 +164,7 @@ impl Parser {
     // 全ての子に対して再帰的にこの関数を呼び出す
     fn search_c_fn(&mut self, depth:usize, fn_node: &Arc<Mutex<FunctionNode>>) {
         let fn_node_locked = fn_node.lock().unwrap();
+        println!("serch_c_fn: {} depth: {}", fn_node_locked.name, fn_node_locked.curr_depth);
         if depth == fn_node_locked.curr_depth {
             return;
         }
