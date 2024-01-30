@@ -14,6 +14,17 @@ fn main() {
         return;
     }
 
+    if args.len() < 2 || args.len() > 3 {
+        eprintln!("Usage: {} <config_file> [output_file]", args[0]);
+        return;
+    }
+    // 引数が3つある場合、3つ目の引数をoutput_fileに格納
+    let output_file = if args.len() == 3 {
+        Some(&args[2])
+    } else {
+        None
+    };
+
     // configファイルを読み込んで処理する
     let config_file = &args[1];
     let file = fs::File::open(config_file).expect("Failed to open config file");
@@ -37,7 +48,11 @@ fn main() {
 
 
     // Call Graphを生成するための処理を呼び出す
-    let mut parser = Parser::new(target_function.clone());
+    let output_file_name = match output_file {
+        Some(name) => format!("yaml_output/{}", name),
+        None => "yaml_output/call_graph.yaml".to_string(),
+    };
+    let mut parser = Parser::new(target_function.clone(), output_file_name);
     parser.source = temp_lines.clone();
     parser.generate_call_graph(depth);
     parser.output_yaml();

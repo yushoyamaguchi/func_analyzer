@@ -34,13 +34,13 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(root_fn_name:String) -> Parser {
+    pub fn new(root_fn_name:String, output_file_name:String) -> Parser {
         Parser {
             fn_hash: RefCell::new(HashMap::new()),
             source: Vec::new(),
             root: Rc::new(RefCell::new(FunctionNode::new(root_fn_name, 0))),
             fn_brackets_count: 0,
-            yaml_file_path: "yaml_output/call_graph.yaml".to_string(), // デフォルトの出力先はyaml_output/call_graph.yaml
+            yaml_file_path: output_file_name, // デフォルトの出力先はyaml_output/call_graph.yaml
         }
     }
 
