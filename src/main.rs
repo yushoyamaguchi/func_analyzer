@@ -10,7 +10,6 @@ use std::rc::Rc;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    print!("args: {:?}", args);
     if args.len() != 2 {
         eprintln!("Usage: {} <config_file>", args[0]);
         return;

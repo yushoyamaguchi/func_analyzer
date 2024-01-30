@@ -196,5 +196,5 @@ impl Parser {
 // Call GraphをYAML形式で出力する関数
 pub fn output_yaml(_root: Rc<RefCell<FunctionNode>>) {
     // YAML形式での出力ロジックをここに実装
-    print!("output_yaml() is not implemented yet");
+    println!("output_yaml() is not implemented yet");
 }
