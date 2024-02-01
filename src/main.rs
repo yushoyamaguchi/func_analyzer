@@ -1,6 +1,6 @@
-mod analyze;
+mod callee;
 
-use analyze::*;
+use callee::*;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead};
