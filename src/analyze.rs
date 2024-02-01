@@ -105,19 +105,20 @@ impl Parser {
 
     fn find_fn_call(&mut self, line: usize) -> Vec<String> {
         let mut fn_names = Vec::new(); // 関数名を格納するためのベクター
+        let re = Regex::new(r"\b\S+\(").unwrap(); // 単語境界(\b)に続く非空白文字列\S+と、その後の"("に一致するパターン
     
         if self.is_fn_call_line(line) {
             let line_content = self.source[line].trim(); // 前置空白を取り除く
-            if let Some(before_parentheses) = line_content.split("(").next() {
-                // `split` の後、`next` を使って最初の要素を取得
-                if let Some(fn_name) = before_parentheses.split_whitespace().last() {
-                    // 空白で分割し、最後の要素を取得
-                    fn_names.push(fn_name.to_string());
-                }
+            for cap in re.captures_iter(line_content) {
+                // 正規表現に一致する全ての部分をイテレート
+                let mut fn_name = cap[0].to_string();
+                fn_name.pop(); // 末尾の"("を取り除く
+                fn_names.push(fn_name);
             }
-        }    
+        }
         fn_names
     }
+    
     
 
     fn find_child(&mut self, fn_node: &Rc<RefCell<FunctionNode>>, line: usize) {
