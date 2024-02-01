@@ -3,7 +3,6 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::{Write, Result};
-use regex::Regex;
 
 
 pub struct FunctionNode {
@@ -105,46 +104,25 @@ impl Parser {
         }
         false
     }
-
-    // if/for/whileの条件式の中に関数呼び出しがあるかチェック
-    // 正規表現を使用している
-    fn is_fn_call_condition(&mut self, line: usize) -> bool {
-        let line_content = self.source[line].trim();
-        // if/for/whileの条件式の中に関数呼び出しがあるかチェック
-        let re = Regex::new(r"(if|while|for)\s*\(([^)]*)\)").unwrap();
-        re.captures(line_content)
-            .map(|caps| caps.get(2).map_or(false, |m| m.as_str().contains('(') && m.as_str().contains(')')))
-            .unwrap_or(false)
-    }
     
 
-    fn find_fn_call(&mut self, line: usize)->Option<String> {
-        // self.source[line]の中から関数呼び出しを探す
-        // あればその関数名を返す
-        // なければNoneを返す
+    fn find_fn_call(&mut self, line: usize) -> Vec<String> {
+        let mut fn_names = Vec::new(); // 関数名を格納するためのベクター
+    
+        // 指定された行が関数呼び出しを含むかどうかをチェック
         if self.is_fn_call_line(line) {
             let line_content = self.source[line].trim(); // 前置空白を取り除く
             if let Some(before_parentheses) = line_content.split("(").next() {
                 // `split` の後、`next` を使って最初の要素を取得
                 if let Some(fn_name) = before_parentheses.split_whitespace().last() {
                     // 空白で分割し、最後の要素を取得
-                    return Some(fn_name.to_string());
+                    fn_names.push(fn_name.to_string());
                 }
             }
-        }
-        // if/for/whileの条件式の中に関数呼び出しがある場合、その関数呼び出しを取得する
-        // 最初にマッチした関数呼び出ししか取得できない
-        if self.is_fn_call_condition(line) {
-            println!("in conditional statement");
-            let line_content = self.source[line].trim();
-            let re = Regex::new(r"(\w+)\s*\(").unwrap(); // 関数名を検出する正規表現
-            if let Some(caps) = re.captures(line_content) {
-                return caps.get(1).map(|m| m.as_str().to_string());
-            }
-        }
-
-        None
+        }    
+        fn_names
     }
+    
 
     fn find_child(&mut self, fn_node: &Rc<RefCell<FunctionNode>>, line: usize) {
         // line行目から始まる関数において、呼び出してる関数を子として登録する
@@ -175,14 +153,18 @@ impl Parser {
             }
     
             // 関数呼び出しのチェック
-            if let Some(fn_name) = self.find_fn_call(curr_line) {
-                // fn_nodeのロックを取得して子ノードを追加
-                let mut fn_node_locked = fn_node.borrow_mut();
-                let curr_depth_buf = fn_node_locked.curr_depth;
-                let fn_name_clone = fn_name.clone();
-                println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
-                fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
+            let fn_names = self.find_fn_call(curr_line);
+            if !fn_names.is_empty() {
+                for fn_name in fn_names {
+                    // fn_nodeのロックを取得して子ノードを追加
+                    let mut fn_node_locked = fn_node.borrow_mut();
+                    let curr_depth_buf = fn_node_locked.curr_depth;
+                    let fn_name_clone = fn_name.clone();
+                    println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
+                    fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
+                }
             }
+            
     
             curr_line += 1;
         }
