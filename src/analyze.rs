@@ -97,12 +97,7 @@ impl Parser {
         // 関数呼び出しの基本的なチェック
         let re = Regex::new(r"\S\(").unwrap(); // 空白ではない文字の後に"("がくるパターン
         if re.is_match(line_content) && line_content.contains(")") {
-            if !line_content.contains("=") && !line_content.contains("+") 
-            && !line_content.contains("-") && !line_content.contains("*") 
-            && !line_content.contains("/") && !line_content.contains("&&") 
-            && !line_content.contains("||") {
-                return true;
-            }
+            return true;
         }
         false
     }
@@ -111,7 +106,6 @@ impl Parser {
     fn find_fn_call(&mut self, line: usize) -> Vec<String> {
         let mut fn_names = Vec::new(); // 関数名を格納するためのベクター
     
-        // 指定された行が関数呼び出しを含むかどうかをチェック
         if self.is_fn_call_line(line) {
             let line_content = self.source[line].trim(); // 前置空白を取り除く
             if let Some(before_parentheses) = line_content.split("(").next() {
