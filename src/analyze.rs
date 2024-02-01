@@ -3,6 +3,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::{Write, Result};
+use regex::Regex;
 
 
 pub struct FunctionNode {
@@ -94,11 +95,12 @@ impl Parser {
             return false;
         }
         // 関数呼び出しの基本的なチェック
-        if line_content.ends_with(";") && line_content.contains("(") && line_content.contains(")") {
+        let re = Regex::new(r"\S\(").unwrap(); // 空白ではない文字の後に"("がくるパターン
+        if re.is_match(line_content) && line_content.contains(")") {
             if !line_content.contains("=") && !line_content.contains("+") 
-               && !line_content.contains("-") && !line_content.contains("*") 
-               && !line_content.contains("/") && !line_content.contains("&&") 
-               && !line_content.contains("||") {
+            && !line_content.contains("-") && !line_content.contains("*") 
+            && !line_content.contains("/") && !line_content.contains("&&") 
+            && !line_content.contains("||") {
                 return true;
             }
         }
