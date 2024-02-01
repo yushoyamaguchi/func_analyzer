@@ -85,13 +85,8 @@ impl Parser {
 
     fn is_fn_call_line(&self, line: usize) -> bool {
         let line_content = self.source[line].trim();
-    
-        // 一行コメントのチェック
-        if line_content.starts_with("//") {
-            return false;
-        }
-        // 複数行コメントのチェック（その行に収まる場合）
-        if line_content.starts_with("/*") && line_content.ends_with("*/") {
+        // コメントのチェック
+        if line_content.starts_with("//") || line_content.starts_with("/*") || line_content.ends_with("*/") {
             return false;
         }
         // 関数呼び出しの基本的なチェック
