@@ -8,7 +8,7 @@ use regex::Regex;
 
 pub struct FunctionNode {
     name: String,
-    calls: Vec<Rc<RefCell<FunctionNode>>>,
+    callees: Vec<Rc<RefCell<FunctionNode>>>,
     curr_depth: usize,
 }
 
@@ -16,12 +16,12 @@ impl FunctionNode {
     pub fn new(name: String, curr_depth_para:usize) -> FunctionNode {
         FunctionNode {
             name,
-            calls: vec![],
+            callees: vec![],
             curr_depth: curr_depth_para,
         }
     }
-    fn add_child(&mut self, child: FunctionNode) {
-        self.calls.push(Rc::new(RefCell::new(child)));
+    fn add_callee(&mut self, child: FunctionNode) {
+        self.callees.push(Rc::new(RefCell::new(child)));
     }
 }
 
@@ -164,7 +164,7 @@ impl Callee {
                     let curr_depth_buf = fn_node_locked.curr_depth;
                     let fn_name_clone = fn_name.clone();
                     println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
-                    fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
+                    fn_node_locked.add_callee(FunctionNode::new(fn_name, curr_depth_buf+1));
                 }
             }
     
@@ -186,7 +186,7 @@ impl Callee {
         self.find_fn_def(&Rc::clone(fn_node));
         // 子に対して再帰的にこの関数を呼び出す
         let fn_node_locked = fn_node.borrow_mut();
-        for child in fn_node_locked.calls.iter() {
+        for child in fn_node_locked.callees.iter() {
             self.search_c_fn(depth, &Rc::clone(child));
         }
     }
@@ -202,7 +202,7 @@ impl Callee {
     fn print_node_test(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
         let fn_node_locked = fn_node.borrow_mut();
         println!("name={}, curr_depth={}", fn_node_locked.name, fn_node_locked.curr_depth);
-        for child in fn_node_locked.calls.iter() {
+        for child in fn_node_locked.callees.iter() {
             self.print_node_test(&Rc::clone(child));
         }
     }
@@ -219,7 +219,7 @@ impl Callee {
         let fn_node_locked = fn_node.borrow();
         writeln!(writer, "{}{}: {}()", " ".repeat(depth * 4), fn_node_locked.curr_depth,fn_node_locked.name)?;
         
-        for child in fn_node_locked.calls.iter() {
+        for child in fn_node_locked.callees.iter() {
             self.write_node_yaml(writer, &Rc::clone(child), depth + 1)?;
         }
 

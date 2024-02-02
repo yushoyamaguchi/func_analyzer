@@ -10,19 +10,19 @@ use std::io::{self, BufRead};
 fn main() {
     let args: Vec<String> = env::args().collect();
     
-    if args.len() < 2 || args.len() > 3 {
-        eprintln!("Usage: {} <config_file> [output_file]", args[0]);
+    if args.len() < 3 || args.len() > 4 {
+        eprintln!("Usage: {} {{caller or callee}} <config_file> [output_file]", args[0]);
         return;
     }
     // 引数が3つある場合、3つ目の引数をoutput_fileに格納
-    let output_file = if args.len() == 3 {
-        Some(&args[2])
+    let output_file = if args.len() == 4 {
+        Some(&args[3])
     } else {
         None
     };
 
     // configファイルを読み込んで処理する
-    let config_file = &args[1];
+    let config_file = &args[2];
     let file = fs::File::open(config_file).expect("Failed to open config file");
     let mut lines = io::BufReader::new(file).lines();
     // 1行目からCソースファイルのパスを読み取る
@@ -53,14 +53,22 @@ fn main() {
 
 
     // Call Graphを生成するための処理を呼び出す
-    fs::create_dir_all("yaml_output").expect("Failed to create yaml_output directory");
-    let output_file_name = match output_file {
-        Some(name) => format!("yaml_output/{}", name),
-        None => "yaml_output/call_graph.yaml".to_string(),
-    };
-    let mut callee = Callee::new(target_function.clone(), output_file_name);
-    callee.source = temp_lines.clone();
-    callee.generate_call_graph(depth);
-    callee.output_yaml();
+    if args[1] == "callee" {
+        fs::create_dir_all("yaml_output").expect("Failed to create yaml_output directory");
+        let output_file_name = match output_file {
+            Some(name) => format!("yaml_output/{}", name),
+            None => "yaml_output/callee_graph.yaml".to_string(),
+        };
+        let mut callee = Callee::new(target_function.clone(), output_file_name);
+        callee.source = temp_lines.clone();
+        callee.generate_call_graph(depth);
+        callee.output_yaml();
+    }
+    else if args[1] == "caller" {
+    }
+    else {
+        eprintln!("Usage: {} {{caller or callee}} <config_file> [output_file]", args[0]);
+        return;
+    }
 }
 
