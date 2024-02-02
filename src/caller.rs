@@ -25,11 +25,10 @@ impl FunctionNode {
 }
 
 pub struct Caller {
-    fn_hash: RefCell<HashMap<String, Vec<usize>>>, // key: 関数名, value: 関数が呼び出されてる行番号のVec
+    fn_hash: RefCell<HashMap<String, Vec<usize>>>, // key: 関数名, value: その関数を呼び出してる関数の定義がある行番号
     no_used_fn: RefCell<HashSet<String>>,
     pub source: Vec<String>,
     pub root: Rc<RefCell<FunctionNode>>,
-    fn_brackets_count: usize,
     yaml_file_path: String,
 }
 
@@ -40,13 +39,98 @@ impl Caller {
             no_used_fn: RefCell::new(HashSet::new()),
             source: Vec::new(),
             root: Rc::new(RefCell::new(FunctionNode::new(root_fn_name, 0))),
-            fn_brackets_count: 0,
             yaml_file_path: output_file_name,
         }
     }
 
+    fn is_function_definition(&self, index: usize) -> bool {
+        if index + 1 >= self.source.len() {
+            return false;
+        }
+    
+        let current_line = self.source[index].trim();
+        let next_line = self.source[index + 1].trim();
+    
+        current_line.contains(")") && next_line == "{"
+    }
+
+    fn extract_fn_name(&self, line: &str) -> String {
+        let re = Regex::new(r"(\w+)\s*\(").unwrap();
+        let caps = re.captures(line).unwrap();
+        caps.get(1).unwrap().as_str().to_string()
+    }
+
+    fn fn_name_of_designated_line(&self, index: usize) -> String {
+        let line = self.source[index].trim();
+        self.extract_fn_name(&line)
+    }
+
+    // nameの関数を呼び出してる関数をcallersに追加
+    fn add_caller_fn(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
+        let fn_name_paren=fn_node.borrow().name.clone()+ "(";
+        let fn_name = fn_node.borrow().name.clone();
+        let mut curr_fn: String = "".to_string();
+        let mut curr_fn_line: usize = 0;
+        let mut called_counter: usize = 0;
+        // まずはhashにあるかチェック
+        if self.no_used_fn.borrow().contains(&fn_name) {
+            return;
+        }
+        if self.fn_hash.borrow().contains_key(&fn_name) {
+            // hashのVecをすべて取り出して、callersに追加
+            // hashには、その関数を呼び出してる関数の定義がある行番号が格納されている
+            for line in self.fn_hash.borrow().get(&fn_name).unwrap() {
+                let fn_name = self.fn_name_of_designated_line(*line);
+                let mut fn_node_borrow = fn_node.borrow_mut();
+                let curr_depth = fn_node_borrow.curr_depth;
+                fn_node_borrow.add_caller(FunctionNode::new(fn_name, curr_depth + 1));
+            }
+            return;
+        }
+        // なければcのsourceを見て探す
+        for (i, line) in self.source.iter().enumerate() {
+            if self.is_function_definition(i) {
+                curr_fn = self.extract_fn_name(&line);
+                curr_fn_line = i;
+                continue;
+            }
+            if line.contains(&fn_name_paren) {
+                // in_what_fnをcallerとして登録
+                let mut fn_node_borrow = fn_node.borrow_mut();
+                let curr_depth = fn_node_borrow.curr_depth;
+                fn_node_borrow.add_caller(FunctionNode::new(curr_fn.clone(), curr_depth + 1));
+                // fn_hashに登録
+                self.fn_hash.borrow_mut().entry(fn_name.clone()).or_insert(Vec::new()).push(curr_fn_line);
+                called_counter += 1;
+            }
+        }
+        if called_counter == 0 {
+            self.no_used_fn.borrow_mut().insert(fn_name);
+        }
+
+    }
+
+    // まずは深さチェック
+    // 次に自分の関数があるかチェックして、あれば自分が呼び出してる関数を子として全て格納
+    // 全ての子に対して再帰的にこの関数を呼び出す
+    fn search_c_fn(&mut self, depth:usize, fn_node: &Rc<RefCell<FunctionNode>>) {
+        {
+            let fn_node_locked = fn_node.borrow_mut();
+            if depth == fn_node_locked.curr_depth {
+                return;
+            }
+        }
+        self.add_caller_fn(&Rc::clone(fn_node));
+        // 子に対して再帰的にこの関数を呼び出す
+        let fn_node_locked = fn_node.borrow_mut();
+        for child in fn_node_locked.callers.iter() {
+            self.search_c_fn(depth, &Rc::clone(child));
+        }
+    }
+
     pub fn generate_call_graph(&mut self, depth: usize) {
-        
+        let root_clone = Rc::clone(&self.root);
+        self.search_c_fn(depth, &root_clone);
     }
 
     #[allow(dead_code)]

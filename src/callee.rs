@@ -62,7 +62,7 @@ impl Callee {
     // 子のノードに対しては,nameとcurr_depthだけ設定する
     // 他のノードとの子の重複はとりあえずチェックしない
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
-    fn find_fn_def(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
+    fn add_callee_fn(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
         let fn_name = fn_node.borrow().name.clone();
         let fn_name_clone = fn_name.clone();
         let mut fn_line:i64 = -1;
@@ -183,7 +183,7 @@ impl Callee {
                 return;
             }
         }
-        self.find_fn_def(&Rc::clone(fn_node));
+        self.add_callee_fn(&Rc::clone(fn_node));
         // 子に対して再帰的にこの関数を呼び出す
         let fn_node_locked = fn_node.borrow_mut();
         for child in fn_node_locked.callees.iter() {
