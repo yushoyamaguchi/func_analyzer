@@ -1,6 +1,6 @@
 # How to Use
 ```
-cargo run -- <config_file>  [<output_file>]
+cargo run -- (caller or callee) <config_file>  [<output_file>]
 ```
 ```output_file``` is optional. Default is "yaml_output/call_graph.yaml".
 ```output_file``` is generated in the directory "yaml_output" .
