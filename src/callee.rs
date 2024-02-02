@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::File;
@@ -28,6 +28,7 @@ impl FunctionNode {
 
 pub struct Parser {
     fn_hash: RefCell<HashMap<String, usize>>,
+    no_def_fn: RefCell<HashSet<String>>,
     pub source: Vec<String>,
     pub root: Rc<RefCell<FunctionNode>>,
     fn_brackets_count: usize,
@@ -38,6 +39,7 @@ impl Parser {
     pub fn new(root_fn_name:String, output_file_name:String) -> Parser {
         Parser {
             fn_hash: RefCell::new(HashMap::new()),
+            no_def_fn: RefCell::new(HashSet::new()),
             source: Vec::new(),
             root: Rc::new(RefCell::new(FunctionNode::new(root_fn_name, 0))),
             fn_brackets_count: 0,
@@ -62,10 +64,14 @@ impl Parser {
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
     fn parse_c_fn(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
         let fn_name = fn_node.borrow().name.clone();
+        let fn_name_clone = fn_name.clone();
         let mut fn_line:i64 = -1;
         {
+            let no_def_fn = self.no_def_fn.borrow_mut();
+            if no_def_fn.contains(&fn_name) {
+                return;
+            }
             let mut fn_hash = self.fn_hash.borrow_mut();
-
             if let Some(&line) = fn_hash.get(&fn_name) {
                 fn_line = line as i64;
             } else {
@@ -80,6 +86,10 @@ impl Parser {
         }
         if fn_line != -1 {
             self.find_child(fn_node, fn_line as usize);
+        }
+        else {
+            let mut no_def_fn = self.no_def_fn.borrow_mut();
+            no_def_fn.insert(fn_name_clone);
         }
     }
 
@@ -156,7 +166,6 @@ impl Parser {
                     fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
                 }
             }
-            
     
             curr_line += 1;
         }
