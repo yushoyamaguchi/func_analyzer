@@ -6,6 +6,11 @@ cargo run -- (caller or callee) <config_file>  [<output_file>]
 ```output_file``` is generated in the directory "yaml_output" .
 ```config_file``` 's path is relative to the root of the project.
 
+## Example
+```
+cargo run -- callee ex_config_files/example_config.txt ex_callee.yaml
+```
+
 # config_file
 ```
 C source files (relative to the root of the project : comma separated)
