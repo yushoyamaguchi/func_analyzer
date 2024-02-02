@@ -96,7 +96,7 @@ impl Parser {
     fn is_fn_call_line(&self, line: usize) -> bool {
         let line_content = self.source[line].trim();
         // コメントのチェック
-        if line_content.starts_with("//") || line_content.starts_with("/*") || line_content.ends_with("*/") {
+        if line_content.starts_with("//") || line_content.starts_with("/*") ||line_content.starts_with("*") || line_content.ends_with("*/") {
             return false;
         }
         // 関数呼び出しの基本的なチェック
@@ -144,14 +144,14 @@ impl Parser {
         while self.fn_brackets_count > 0 {
             let line_content = self.source[curr_line].trim();
     
-            // 閉じ括弧のチェック
-            if line_content == "}" {
-                self.fn_brackets_count -= 1;
+            // 閉じ括弧"}"を含むかどうかでカウンタを更新
+            if line_content.contains("}") {
+                self.fn_brackets_count -= line_content.matches("}").count();
             }
-    
-            // 開き括弧のチェック（ネストされたブロックを考慮）
-            if line_content == "{" {
-                self.fn_brackets_count += 1;
+
+            // 開き括弧"{"を含むかどうかでカウンタを更新（ネストされたブロックを考慮）
+            if line_content.contains("{") {
+                self.fn_brackets_count += line_content.matches("{").count();
             }
     
             // 関数呼び出しのチェック
