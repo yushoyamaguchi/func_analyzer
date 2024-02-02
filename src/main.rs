@@ -9,11 +9,7 @@ use std::io::{self, BufRead};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        eprintln!("Usage: {} <config_file>", args[0]);
-        return;
-    }
-
+    
     if args.len() < 2 || args.len() > 3 {
         eprintln!("Usage: {} <config_file> [output_file]", args[0]);
         return;
