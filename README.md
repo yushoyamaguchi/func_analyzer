@@ -35,6 +35,3 @@ funcA()
     statement;
 }
 ```
-
-```c
-```
