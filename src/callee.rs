@@ -193,7 +193,6 @@ impl Callee {
 
     // Call Graphを生成するための関数
     pub fn generate_call_graph(&mut self, depth: usize)  {
-        let depth = depth;
         let root_clone = Rc::clone(&self.root);
         self.search_c_fn(depth, &root_clone);
     }
@@ -227,9 +226,6 @@ impl Callee {
     }
 
     pub fn output_yaml(&mut self) {
-        /*// rootから順番に出力する
-        let root_clone = Rc::clone(&self.root);
-        self.print_node_test(&root_clone);*/
         self.write_yaml().expect("Failed to write YAML");
     }
 

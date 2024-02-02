@@ -1,6 +1,8 @@
 mod callee;
+mod caller;
 
 use callee::*;
+use caller::*;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead};
@@ -65,6 +67,15 @@ fn main() {
         callee.output_yaml();
     }
     else if args[1] == "caller" {
+        fs::create_dir_all("yaml_output").expect("Failed to create yaml_output directory");
+        let output_file_name = match output_file {
+            Some(name) => format!("yaml_output/{}", name),
+            None => "yaml_output/caller_graph.yaml".to_string(),
+        };
+        let mut caller = Caller::new(target_function.clone(), output_file_name);
+        caller.source = temp_lines.clone();
+        caller.generate_call_graph(depth);
+        caller.output_yaml();
     }
     else {
         eprintln!("Usage: {} {{caller or callee}} <config_file> [output_file]", args[0]);
