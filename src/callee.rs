@@ -62,7 +62,7 @@ impl Parser {
     // 子のノードに対しては,nameとcurr_depthだけ設定する
     // 他のノードとの子の重複はとりあえずチェックしない
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
-    fn parse_c_fn(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
+    fn find_fn_def(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
         let fn_name = fn_node.borrow().name.clone();
         let fn_name_clone = fn_name.clone();
         let mut fn_line:i64 = -1;
@@ -85,7 +85,7 @@ impl Parser {
             }
         }
         if fn_line != -1 {
-            self.find_child(fn_node, fn_line as usize);
+            self.add_child_node(fn_node, fn_line as usize);
         }
         else {
             let mut no_def_fn = self.no_def_fn.borrow_mut();
@@ -126,7 +126,7 @@ impl Parser {
     
     
 
-    fn find_child(&mut self, fn_node: &Rc<RefCell<FunctionNode>>, line: usize) {
+    fn add_child_node(&mut self, fn_node: &Rc<RefCell<FunctionNode>>, line: usize) {
         // line行目から始まる関数において、呼び出してる関数を子として登録する
         // 子のノードに対しては,nameとcurr_depthだけ設定する
 
@@ -182,7 +182,7 @@ impl Parser {
                 return;
             }
         }
-        self.parse_c_fn(&Rc::clone(fn_node));
+        self.find_fn_def(&Rc::clone(fn_node));
         // 子に対して再帰的にこの関数を呼び出す
         let fn_node_locked = fn_node.borrow_mut();
         for child in fn_node_locked.calls.iter() {
