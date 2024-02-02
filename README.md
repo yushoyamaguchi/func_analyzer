@@ -8,14 +8,14 @@ cargo run -- <config_file>  [<output_file>]
 
 # config_file
 ```
-C source file (relative to the root of the project)
+C source files (relative to the root of the project : comma separated)
 Target function name
 Depth of the call graph
 ```
 
 ## Example
 ```
-c_src_files/example.c
+c_src_files/example.c , c_src_files/example2.c
 fnA
 3
 ```
