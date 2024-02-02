@@ -110,7 +110,8 @@ impl Parser {
 
     fn find_fn_call(&mut self, line: usize) -> Vec<String> {
         let mut fn_names = Vec::new(); // 関数名を格納するためのベクター
-        let re = Regex::new(r"\b\S+\(").unwrap(); // 単語境界(\b)に続く非空白文字列\S+と、その後の"("に一致するパターン
+        let re = Regex::new(r"\b[a-zA-Z_][a-zA-Z0-9_]*\(").unwrap();
+
     
         if self.is_fn_call_line(line) {
             let line_content = self.source[line].trim(); // 前置空白を取り除く
