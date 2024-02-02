@@ -35,3 +35,10 @@ funcA()
     statement;
 }
 ```
+
+```c
+/*
+* Comment line in multiple lines comment out must be start with "*"
+*/
+
+```
