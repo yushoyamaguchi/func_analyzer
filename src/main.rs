@@ -58,9 +58,9 @@ fn main() {
         Some(name) => format!("yaml_output/{}", name),
         None => "yaml_output/call_graph.yaml".to_string(),
     };
-    let mut parser = Parser::new(target_function.clone(), output_file_name);
-    parser.source = temp_lines.clone();
-    parser.generate_call_graph(depth);
-    parser.output_yaml();
+    let mut callee = Callee::new(target_function.clone(), output_file_name);
+    callee.source = temp_lines.clone();
+    callee.generate_call_graph(depth);
+    callee.output_yaml();
 }
 

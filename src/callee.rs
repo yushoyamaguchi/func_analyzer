@@ -26,7 +26,7 @@ impl FunctionNode {
 }
 
 
-pub struct Parser {
+pub struct Callee {
     fn_hash: RefCell<HashMap<String, usize>>,
     no_def_fn: RefCell<HashSet<String>>,
     pub source: Vec<String>,
@@ -35,9 +35,9 @@ pub struct Parser {
     yaml_file_path: String,
 }
 
-impl Parser {
-    pub fn new(root_fn_name:String, output_file_name:String) -> Parser {
-        Parser {
+impl Callee {
+    pub fn new(root_fn_name:String, output_file_name:String) -> Callee {
+        Callee {
             fn_hash: RefCell::new(HashMap::new()),
             no_def_fn: RefCell::new(HashSet::new()),
             source: Vec::new(),
