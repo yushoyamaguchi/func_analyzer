@@ -113,6 +113,7 @@ impl Caller {
                 // in_what_fnをcallerとして登録
                 let mut fn_node_borrow = fn_node.borrow_mut();
                 let curr_depth = fn_node_borrow.curr_depth;
+                println!("parent={}, child={}, depth={}", curr_fn, fn_name, curr_depth+1);
                 fn_node_borrow.add_caller(FunctionNode::new(curr_fn.clone(), curr_depth + 1));
                 // fn_hashに登録
                 self.fn_hash.borrow_mut().entry(fn_name.clone()).or_insert(Vec::new()).push(curr_fn_line);
