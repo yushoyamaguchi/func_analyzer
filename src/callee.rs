@@ -8,7 +8,7 @@ use regex::Regex;
 
 pub struct FunctionNode {
     name: String,
-    calls: Vec<Rc<RefCell<FunctionNode>>>,
+    callees: Vec<Rc<RefCell<FunctionNode>>>,
     curr_depth: usize,
 }
 
@@ -16,12 +16,12 @@ impl FunctionNode {
     pub fn new(name: String, curr_depth_para:usize) -> FunctionNode {
         FunctionNode {
             name,
-            calls: vec![],
+            callees: vec![],
             curr_depth: curr_depth_para,
         }
     }
-    fn add_child(&mut self, child: FunctionNode) {
-        self.calls.push(Rc::new(RefCell::new(child)));
+    fn add_callee(&mut self, child: FunctionNode) {
+        self.callees.push(Rc::new(RefCell::new(child)));
     }
 }
 
@@ -51,9 +51,15 @@ impl Callee {
         if index + 1 >= self.source.len() {
             return false;
         }
-    
+
         let current_line = self.source[index].trim();
-        let next_line = self.source[index + 1].trim();
+        if current_line.starts_with("//") || current_line.starts_with("/*") || current_line.starts_with("*") || current_line.ends_with("*/") {
+            return false;
+        }
+        let mut next_line = "";
+        if index + 1 < self.source.len() {
+            next_line = self.source[index + 1].trim();
+        }
     
         current_line.contains(&format!("{}(", fn_name)) && current_line.contains(")") && next_line == "{"
     }
@@ -62,7 +68,7 @@ impl Callee {
     // 子のノードに対しては,nameとcurr_depthだけ設定する
     // 他のノードとの子の重複はとりあえずチェックしない
     // ある関数の定義が何行目にあるかのハッシュテーブルを参照する
-    fn find_fn_def(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
+    fn add_callee_fn(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
         let fn_name = fn_node.borrow().name.clone();
         let fn_name_clone = fn_name.clone();
         let mut fn_line:i64 = -1;
@@ -164,7 +170,7 @@ impl Callee {
                     let curr_depth_buf = fn_node_locked.curr_depth;
                     let fn_name_clone = fn_name.clone();
                     println!("parent={}, child={}, curr_depth={}", fn_node_locked.name, fn_name_clone, curr_depth_buf+1);
-                    fn_node_locked.add_child(FunctionNode::new(fn_name, curr_depth_buf+1));
+                    fn_node_locked.add_callee(FunctionNode::new(fn_name, curr_depth_buf+1));
                 }
             }
     
@@ -173,27 +179,21 @@ impl Callee {
  
     }
 
-    // まずは深さチェック
     // 次に自分の関数があるかチェックして、あれば自分が呼び出してる関数を子として全て格納
     // 全ての子に対して再帰的にこの関数を呼び出す
     fn search_c_fn(&mut self, depth:usize, fn_node: &Rc<RefCell<FunctionNode>>) {
-        {
-            let fn_node_locked = fn_node.borrow_mut();
-            if depth == fn_node_locked.curr_depth {
-                return;
-            }
-        }
-        self.find_fn_def(&Rc::clone(fn_node));
-        // 子に対して再帰的にこの関数を呼び出す
+        self.add_callee_fn(&Rc::clone(fn_node));
+        // 子に対して再帰的にこの関数を呼び出す (深さもチェック)
         let fn_node_locked = fn_node.borrow_mut();
-        for child in fn_node_locked.calls.iter() {
-            self.search_c_fn(depth, &Rc::clone(child));
+        for child in fn_node_locked.callees.iter() {
+            if depth > fn_node_locked.curr_depth+1 {
+                self.search_c_fn(depth, &Rc::clone(child));
+            }
         }
     }
 
     // Call Graphを生成するための関数
     pub fn generate_call_graph(&mut self, depth: usize)  {
-        let depth = depth;
         let root_clone = Rc::clone(&self.root);
         self.search_c_fn(depth, &root_clone);
     }
@@ -202,7 +202,7 @@ impl Callee {
     fn print_node_test(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
         let fn_node_locked = fn_node.borrow_mut();
         println!("name={}, curr_depth={}", fn_node_locked.name, fn_node_locked.curr_depth);
-        for child in fn_node_locked.calls.iter() {
+        for child in fn_node_locked.callees.iter() {
             self.print_node_test(&Rc::clone(child));
         }
     }
@@ -211,6 +211,7 @@ impl Callee {
         let file_path = self.yaml_file_path.clone();
         let file = File::create(file_path)?;
         let mut writer = std::io::BufWriter::new(file);
+        writeln!(writer, "<callee_graph>")?;
 
         self.write_node_yaml(&mut writer, &self.root, 0)
     }
@@ -219,7 +220,7 @@ impl Callee {
         let fn_node_locked = fn_node.borrow();
         writeln!(writer, "{}{}: {}()", " ".repeat(depth * 4), fn_node_locked.curr_depth,fn_node_locked.name)?;
         
-        for child in fn_node_locked.calls.iter() {
+        for child in fn_node_locked.callees.iter() {
             self.write_node_yaml(writer, &Rc::clone(child), depth + 1)?;
         }
 
@@ -227,9 +228,6 @@ impl Callee {
     }
 
     pub fn output_yaml(&mut self) {
-        /*// rootから順番に出力する
-        let root_clone = Rc::clone(&self.root);
-        self.print_node_test(&root_clone);*/
         self.write_yaml().expect("Failed to write YAML");
     }
 
