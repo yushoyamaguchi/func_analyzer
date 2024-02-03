@@ -51,9 +51,12 @@ impl Callee {
         if index + 1 >= self.source.len() {
             return false;
         }
-    
+        
         let current_line = self.source[index].trim();
-        let next_line = self.source[index + 1].trim();
+        let mut next_line = "";
+        if index + 1 < self.source.len() {
+            next_line = self.source[index + 1].trim();
+        }
     
         current_line.contains(&format!("{}(", fn_name)) && current_line.contains(")") && next_line == "{"
     }

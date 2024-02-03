@@ -49,14 +49,19 @@ impl Caller {
         }
     
         let current_line = self.source[index].trim();
-        let next_line = self.source[index + 1].trim();
-        let next_next_line = self.source[index + 2].trim();
-        let next_next_next_line = self.source[index + 3].trim();
+        let mut next_line = "";
+        if index + 1 < self.source.len() {
+            next_line = self.source[index + 1].trim();
+        }
+        let mut next_next_line = "";
+        if index + 2 < self.source.len() {
+            next_next_line = self.source[index + 2].trim();
+        }
     
         if current_line.contains("(") &&current_line.contains(")") && next_line == "{" {
             return true;
         }
-        else if current_line.contains("(") && next_line.contains(")") && next_next_line == "{" {
+        if current_line.contains("(") && next_line.contains(")") && next_next_line == "{" {
             return true;
         }
         else {
