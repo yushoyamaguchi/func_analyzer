@@ -17,7 +17,7 @@ fn main() {
         return;
     }
     // 引数が2つある場合、2つ目の引数をoutput_fileに格納
-    let output_file = if args.len() == 4 {
+    let output_file = if args.len() == 3 {
         Some(&args[2])
     } else {
         None

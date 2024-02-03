@@ -126,21 +126,16 @@ impl Caller {
 
     }
 
-    // まずは深さチェック
     // 次に自分の関数があるかチェックして、あれば自分が呼び出してる関数を子として全て格納
     // 全ての子に対して再帰的にこの関数を呼び出す
     fn search_c_fn(&mut self, depth:usize, fn_node: &Rc<RefCell<FunctionNode>>) {
-        {
-            let fn_node_locked = fn_node.borrow_mut();
-            if depth == fn_node_locked.curr_depth {
-                return;
-            }
-        }
         self.add_caller_fn(&Rc::clone(fn_node));
-        // 子に対して再帰的にこの関数を呼び出す
+        // 子に対して再帰的にこの関数を呼び出す (深さもチェック)
         let fn_node_locked = fn_node.borrow_mut();
         for child in fn_node_locked.callers.iter() {
-            self.search_c_fn(depth, &Rc::clone(child));
+            if depth > fn_node_locked.curr_depth+1 {
+                self.search_c_fn(depth, &Rc::clone(child));
+            }
         }
     }
 
