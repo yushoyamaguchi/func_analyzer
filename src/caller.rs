@@ -50,8 +50,18 @@ impl Caller {
     
         let current_line = self.source[index].trim();
         let next_line = self.source[index + 1].trim();
+        let next_next_line = self.source[index + 2].trim();
+        let next_next_next_line = self.source[index + 3].trim();
     
-        current_line.contains(")") && next_line == "{"
+        if current_line.contains("(") &&current_line.contains(")") && next_line == "{" {
+            return true;
+        }
+        else if current_line.contains("(") && next_line.contains(")") && next_next_line == "{" {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     fn extract_fn_name(&self, line: &str) -> String {
