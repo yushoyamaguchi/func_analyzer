@@ -49,6 +49,9 @@ impl Caller {
         }
     
         let current_line = self.source[index].trim();
+        if current_line.starts_with("//") || current_line.starts_with("/*") || current_line.starts_with("*") || current_line.ends_with("*/") {
+            return false;
+        }
         let mut next_line = "";
         if index + 1 < self.source.len() {
             next_line = self.source[index + 1].trim();
