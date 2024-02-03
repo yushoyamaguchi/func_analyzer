@@ -80,9 +80,16 @@ impl Caller {
         self.extract_fn_name(&line)
     }
 
+    fn check_fn_def_by_name(& self, line_content: &str, fn_name: &str) -> bool {
+        let line_content = line_content.trim();
+        if line_content.contains(&format!("{}(", fn_name)) && line_content.contains(")") && !line_content.starts_with("//") && !line_content.starts_with("/*") && !line_content.ends_with("*/") && !line_content.starts_with("*"){
+            return true;
+        }
+        return false;
+    }
+
     // nameの関数を呼び出してる関数をcallersに追加
     fn add_caller_fn(&mut self, fn_node: &Rc<RefCell<FunctionNode>>) {
-        let fn_name_paren=fn_node.borrow().name.clone()+ "(";
         let fn_name = fn_node.borrow().name.clone();
         let mut curr_fn: String = "".to_string();
         let mut curr_fn_line: usize = 0;
@@ -109,7 +116,7 @@ impl Caller {
                 curr_fn_line = i;
                 continue;
             }
-            if line.contains(&fn_name_paren) {
+            if self.check_fn_def_by_name(&line, &fn_name){
                 // in_what_fnをcallerとして登録
                 let mut fn_node_borrow = fn_node.borrow_mut();
                 let curr_depth = fn_node_borrow.curr_depth;
