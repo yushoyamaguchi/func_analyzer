@@ -157,6 +157,7 @@ impl Caller {
         let file_path = self.yaml_file_path.clone();
         let file = File::create(file_path)?;
         let mut writer = std::io::BufWriter::new(file);
+        writeln!(writer, "<caller_graph>")?;
 
         self.write_node_yaml(&mut writer, &self.root, 0)
     }
