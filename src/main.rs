@@ -29,7 +29,10 @@ fn main() {
     let mut lines = io::BufReader::new(file).lines();
     // 1行目からCソースファイルのパスを読み取る
     let c_source_files_line = lines.next().expect("Expected C source file paths").unwrap();
-    let c_source_files: Vec<&str> = c_source_files_line.split(',').collect();
+    let c_source_files: Vec<&str> = c_source_files_line
+    .split(',')
+    .map(|s| s.trim()) // Trim whitespace around each element
+    .collect();
     // ファイルが0個の場合、エラーを表示
     if c_source_files.is_empty() {
         panic!("No C source files provided");
