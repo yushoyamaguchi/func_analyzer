@@ -45,7 +45,7 @@ funcA()
 
 ```c
 /*
-* Comment line in multiple lines comment out must be start with "*"
+* Comment line in multiple lines comment out must start with "*"
 */
 
 ```
