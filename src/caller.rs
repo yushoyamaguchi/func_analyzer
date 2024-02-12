@@ -83,9 +83,15 @@ impl Caller {
         self.extract_fn_name(&line)
     }
 
+    fn fn_invoke_check_condition(&self, line_content: &str, fn_name: &str) -> bool {
+        let pattern = format!(r"(?:\s|>|^){}\(", fn_name);
+        let re = Regex::new(&pattern).expect("Invalid regex pattern");
+        re.is_match(line_content)
+    }
+
     fn check_fn_def_by_name(& self, line_content: &str, fn_name: &str) -> bool {
         let line_content = line_content.trim();
-        if line_content.contains(&format!("{}(", fn_name)) && line_content.contains(")") && !line_content.starts_with("//") && !line_content.starts_with("/*") && !line_content.ends_with("*/") && !line_content.starts_with("*"){
+        if self.fn_invoke_check_condition(line_content, fn_name) && line_content.contains(")") && !line_content.starts_with("//") && !line_content.starts_with("/*") && !line_content.ends_with("*/") && !line_content.starts_with("*"){
             return true;
         }
         return false;
@@ -120,7 +126,7 @@ impl Caller {
                 continue;
             }
             if self.check_fn_def_by_name(&line, &fn_name){
-                // in_what_fnをcallerとして登録
+                // curr_fnをcallerとして登録
                 let mut fn_node_borrow = fn_node.borrow_mut();
                 let curr_depth = fn_node_borrow.curr_depth;
                 println!("parent={}, child={}, depth={}", curr_fn, fn_name, curr_depth+1);
