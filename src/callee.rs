@@ -61,7 +61,7 @@ impl Callee {
             next_line = self.source[index + 1].trim();
         }
     
-        current_line.contains(&format!("{}(", fn_name)) && current_line.contains(")") && next_line == "{"
+        current_line.contains(&format!(" {}(", fn_name)) && current_line.contains(")") && next_line == "{"
     }
 
     // nameの関数の中身を調べて、そこから呼び出してる関数を子として登録する
