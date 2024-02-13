@@ -3,7 +3,9 @@
 cargo run -- <config_file>  [<output_file>]
 ```
 ```output_file``` is optional. Default is "yaml_output/call_graph.yaml".
+<br>
 If you designate the outputed yaml file name, ```output_file``` is generated in the directory "/yaml_output" .
+<br>
 ```config_file``` 's path is relative to the root of the project.
 
 ## Example
@@ -29,6 +31,7 @@ callee
 
 # Caution
 C source code must be written in a specific format like Linux kernel source code.
+<br>
 For example,
 ```c
 if (condition) { // a space after "if"/"for"/"while" is required
