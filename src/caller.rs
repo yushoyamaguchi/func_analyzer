@@ -83,13 +83,14 @@ impl Caller {
         self.extract_fn_name(&line)
     }
 
+    // 関数呼び出しは、空白 or ">"の次にくるか、行頭にある
     fn fn_invoke_check_condition(&self, line_content: &str, fn_name: &str) -> bool {
         let pattern = format!(r"(?:\s|>|^){}\(", fn_name);
         let re = Regex::new(&pattern).expect("Invalid regex pattern");
         re.is_match(line_content)
     }
 
-    fn check_fn_def_by_name(& self, line_content: &str, fn_name: &str) -> bool {
+    fn check_fn_invoke_by_name(& self, line_content: &str, fn_name: &str) -> bool {
         let line_content = line_content.trim();
         if self.fn_invoke_check_condition(line_content, fn_name) && line_content.contains(")") && !line_content.starts_with("//") && !line_content.starts_with("/*") && !line_content.ends_with("*/") && !line_content.starts_with("*"){
             return true;
@@ -125,7 +126,7 @@ impl Caller {
                 curr_fn_line = i;
                 continue;
             }
-            if self.check_fn_def_by_name(&line, &fn_name){
+            if self.check_fn_invoke_by_name(&line, &fn_name){
                 // curr_fnをcallerとして登録
                 let mut fn_node_borrow = fn_node.borrow_mut();
                 let curr_depth = fn_node_borrow.curr_depth;
