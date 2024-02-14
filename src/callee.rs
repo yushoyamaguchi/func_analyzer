@@ -54,6 +54,9 @@ impl Callee {
         if line.contains(format!(" {}(", fn_name).as_str()) {
             return true;
         }
+        if line.contains(format!(" *{}(", fn_name).as_str()) {
+            return true;
+        }
         false
     }
 
