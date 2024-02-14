@@ -47,6 +47,16 @@ impl Callee {
         }
     }
 
+    fn fn_def_start_condition(&self, fn_name: &str, line: &str) -> bool {
+        if line.starts_with(format!("{}(", fn_name).as_str()) {
+            return true;
+        }
+        if line.contains(format!(" {}(", fn_name).as_str()) {
+            return true;
+        }
+        false
+    }
+
     fn is_function_definition(&self, index: usize, fn_name: &str) -> bool {
         if index + 1 >= self.source.len() {
             return false;
@@ -60,8 +70,19 @@ impl Callee {
         if index + 1 < self.source.len() {
             next_line = self.source[index + 1].trim();
         }
-    
-        current_line.contains(&format!(" {}(", fn_name)) && current_line.contains(")") && next_line == "{"
+        let mut next_next_line = "";
+        if index + 2 < self.source.len() {
+            next_next_line = self.source[index + 2].trim();
+        }
+
+        if self.fn_def_start_condition(fn_name, current_line) && current_line.contains(")") && next_line == "{" {
+            return true;
+        }
+        if self.fn_def_start_condition(fn_name, current_line) && next_line.contains(")") && next_next_line == "{" {
+            return true;
+        }
+        
+        false
     }
 
     // nameの関数の中身を調べて、そこから呼び出してる関数を子として登録する
@@ -232,5 +253,4 @@ impl Callee {
     }
 
 }
-
 
