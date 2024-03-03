@@ -37,7 +37,7 @@ callee
 ```
 
 # Output
-When we use [this](./ex_c_src_files/example.c) as a source code, and [this](./ex_config_files/example_conf1.txt) as a config file, and execute the command below,
+When we use [this sample](./ex_c_src_files/example.c) as a source code, and [this sample](./ex_config_files/example_conf1.txt) as a config file, and execute the command below,
 ```
 cargo run -- ex_config_files/example_conf1.txt
 ```
