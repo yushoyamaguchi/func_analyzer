@@ -41,8 +41,7 @@ When we use [this](./ex_c_src_files/example.c) as a source code, and [this](./ex
 ```
 cargo run -- ex_config_files/example_conf1.txt
 ```
-we get [this](./ex_yaml_output/example_callee.yaml) as a result.
-(The below is the content of the yaml file.)
+we get the following output.
 
 ```yaml
 <callee_graph>
