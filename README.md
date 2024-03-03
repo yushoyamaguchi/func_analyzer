@@ -1,3 +1,10 @@
+# What is this?
+This is a tool to generate a call graph of C source code.
+<br>
+caller relation or callee relation can be selected.
+<br>
+Since we are only analyzing the text of the source code, there may be omissions or mistakes.
+
 # How to Use
 ```
 cargo run -- <config_file>  [<output_file>]
@@ -27,6 +34,26 @@ c_src_files/example.c , c_src_files/example2.c
 fnA
 3
 callee
+```
+
+# Output
+When we use [this](./ex_c_src_files/example.c) as a source code, and [this](./ex_config_files/example_conf1.txt) as a config file, and execute the command below,
+```
+cargo run -- ex_config_files/example_conf1.txt
+```
+we get [this](./ex_yaml_output/example_callee.yaml) as a result.
+
+```yaml
+<callee_graph>
+0: fnA()
+    1: printf()
+    1: fnB()
+        2: printf()
+    1: fnC()
+        2: printf()
+        2: fnD()
+            3: printf()
+
 ```
 
 # Caution

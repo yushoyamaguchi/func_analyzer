@@ -1,0 +1,9 @@
+<callee_graph>
+0: fnA()
+    1: printf()
+    1: fnB()
+        2: printf()
+    1: fnC()
+        2: printf()
+        2: fnD()
+            3: printf()
