@@ -83,16 +83,11 @@ impl Caller {
         self.extract_fn_name(&line)
     }
 
-    // 関数呼び出しは、空白 or ">"の次にくるか、行頭にある
-    fn fn_invoke_check_condition(&self, line_content: &str, fn_name: &str) -> bool {
-        let pattern = format!(r"(?:\s|>|^){}\(", fn_name);
-        let re = Regex::new(&pattern).expect("Invalid regex pattern");
-        re.is_match(line_content)
-    }
-
     fn check_fn_invoke_by_name(& self, line_content: &str, fn_name: &str) -> bool {
         let line_content = line_content.trim();
-        if self.fn_invoke_check_condition(line_content, fn_name) && line_content.contains(")") && !line_content.starts_with("//") && !line_content.starts_with("/*") && !line_content.ends_with("*/") && !line_content.starts_with("*"){
+        let pattern = format!(r"\b{}\(", fn_name);
+        let re = Regex::new(&pattern).unwrap();
+        if re.is_match(line_content) && line_content.contains(")") && !line_content.starts_with("//") && !line_content.starts_with("/*") && !line_content.ends_with("*/") && !line_content.starts_with("*"){
             return true;
         }
         return false;
