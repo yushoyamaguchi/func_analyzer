@@ -1,2 +1,2 @@
 # caller追跡マルチスレッド化
-fn_hashとno_used_fnをRwLockに変更
+スレッドを作る部分の中では、self.XXXを使って再帰呼び出しできないので、それをどうにかする
