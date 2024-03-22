@@ -1,14 +1,12 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
-use std::cell::RefCell;
+use std::sync::{Arc, Mutex, RwLock};
 use std::fs::File;
 use std::io::{Write, Result};
-use std::sync::RwLock;
 use regex::Regex;
 
 pub struct FunctionNode {
     name: String,
-    callers: Vec<Arc<RefCell<FunctionNode>>>,
+    callers: Vec<Arc<Mutex<FunctionNode>>>,
     curr_depth: usize,
 }
 
@@ -21,7 +19,7 @@ impl FunctionNode {
         }
     }
     fn add_caller(&mut self, child: FunctionNode) {
-        self.callers.push(Arc::new(RefCell::new(child)));
+        self.callers.push(Arc::new(Mutex::new(child)));
     }
 }
 
@@ -29,7 +27,7 @@ pub struct Caller {
     fn_hash: RwLock<HashMap<String, Vec<usize>>>, // key: 関数名, value: その関数を呼び出してる関数の定義がある行番号
     no_used_fn: RwLock<HashSet<String>>,
     pub source: Vec<String>,
-    pub root: Arc<RefCell<FunctionNode>>,
+    pub root: Arc<Mutex<FunctionNode>>,
     yaml_file_path: String,
 }
 
@@ -39,7 +37,7 @@ impl Caller {
             fn_hash: RwLock::new(HashMap::new()),
             no_used_fn: RwLock::new(HashSet::new()),
             source: Vec::new(),
-            root: Arc::new(RefCell::new(FunctionNode::new(root_fn_name, 0))),
+            root: Arc::new(Mutex::new(FunctionNode::new(root_fn_name, 0))),
             yaml_file_path: output_file_name,
         }
     }
@@ -95,8 +93,8 @@ impl Caller {
     }
 
     // nameの関数を呼び出してる関数をcallersに追加
-    fn add_caller_fn(&mut self, fn_node: &Arc<RefCell<FunctionNode>>) {
-        let fn_name = fn_node.borrow().name.clone();
+    fn add_caller_fn(&mut self, fn_node: &Arc<Mutex<FunctionNode>>) {
+        let fn_name = fn_node.lock().unwrap().name.clone();
         let mut curr_fn: String = "".to_string();
         let mut curr_fn_line: usize = 0;
         let mut called_counter: usize = 0;
@@ -109,7 +107,7 @@ impl Caller {
             // hashには、その関数を呼び出してる関数の定義がある行番号が格納されている
             for line in self.fn_hash.read().unwrap().get(&fn_name).unwrap() {
                 let fn_name = self.fn_name_of_designated_line(*line);
-                let mut fn_node_borrow = fn_node.borrow_mut();
+                let mut fn_node_borrow = fn_node.lock().unwrap();
                 let curr_depth = fn_node_borrow.curr_depth;
                 fn_node_borrow.add_caller(FunctionNode::new(fn_name, curr_depth + 1));
             }
@@ -124,7 +122,7 @@ impl Caller {
             }
             if self.check_fn_invoke_by_name(&line, &fn_name){
                 // curr_fnをcallerとして登録
-                let mut fn_node_borrow = fn_node.borrow_mut();
+                let mut fn_node_borrow = fn_node.lock().unwrap();
                 let curr_depth = fn_node_borrow.curr_depth;
                 println!("parent={}, child={}, depth={}", curr_fn, fn_name, curr_depth+1);
                 fn_node_borrow.add_caller(FunctionNode::new(curr_fn.clone(), curr_depth + 1));
@@ -141,10 +139,10 @@ impl Caller {
 
     // 次に自分の関数があるかチェックして、あれば自分が呼び出してる関数を子として全て格納
     // 全ての子に対して再帰的にこの関数を呼び出す
-    fn search_c_fn(&mut self, depth:usize, fn_node: &Arc<RefCell<FunctionNode>>) {
+    fn search_c_fn(&mut self, depth:usize, fn_node: &Arc<Mutex<FunctionNode>>) {
         self.add_caller_fn(&Arc::clone(fn_node));
         // 子に対して再帰的にこの関数を呼び出す (深さもチェック)
-        let fn_node_locked = fn_node.borrow_mut();
+        let fn_node_locked = fn_node.lock().unwrap();
         for child in fn_node_locked.callers.iter() {
             if depth > fn_node_locked.curr_depth+1 {
                 self.search_c_fn(depth, &Arc::clone(child));
@@ -158,8 +156,8 @@ impl Caller {
     }
 
     #[allow(dead_code)]
-    fn print_node_test(&mut self, fn_node: &Arc<RefCell<FunctionNode>>) {
-        let fn_node_locked = fn_node.borrow_mut();
+    fn print_node_test(&mut self, fn_node: &Arc<Mutex<FunctionNode>>) {
+        let fn_node_locked = fn_node.lock().unwrap();
         println!("name={}, curr_depth={}", fn_node_locked.name, fn_node_locked.curr_depth);
         for child in fn_node_locked.callers.iter() {
             self.print_node_test(&Arc::clone(child));
@@ -175,8 +173,8 @@ impl Caller {
         self.write_node_yaml(&mut writer, &self.root, 0)
     }
 
-    fn write_node_yaml(&self, writer: &mut impl Write, fn_node: &Arc<RefCell<FunctionNode>>, depth: usize) -> Result<()> {
-        let fn_node_locked = fn_node.borrow();
+    fn write_node_yaml(&self, writer: &mut impl Write, fn_node: &Arc<Mutex<FunctionNode>>, depth: usize) -> Result<()> {
+        let fn_node_locked = fn_node.lock().unwrap();
         writeln!(writer, "{}{}: {}()", " ".repeat(depth * 4), fn_node_locked.curr_depth,fn_node_locked.name)?;
         
         for child in fn_node_locked.callers.iter() {
