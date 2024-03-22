@@ -1,2 +1,2 @@
 # caller追跡マルチスレッド化
-RefcellをMutexかRwLockに変更
+fn_hashとno_used_fnをRwLockに変更
