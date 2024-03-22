@@ -3,6 +3,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::{Write, Result};
+use std::sync::RwLock;
 use regex::Regex;
 
 pub struct FunctionNode {
@@ -25,8 +26,8 @@ impl FunctionNode {
 }
 
 pub struct Caller {
-    fn_hash: RefCell<HashMap<String, Vec<usize>>>, // key: 関数名, value: その関数を呼び出してる関数の定義がある行番号
-    no_used_fn: RefCell<HashSet<String>>,
+    fn_hash: RwLock<HashMap<String, Vec<usize>>>, // key: 関数名, value: その関数を呼び出してる関数の定義がある行番号
+    no_used_fn: RwLock<HashSet<String>>,
     pub source: Vec<String>,
     pub root: Rc<RefCell<FunctionNode>>,
     yaml_file_path: String,
@@ -35,8 +36,8 @@ pub struct Caller {
 impl Caller {
     pub fn new(root_fn_name:String, output_file_name:String) -> Caller {
         Caller {
-            fn_hash: RefCell::new(HashMap::new()),
-            no_used_fn: RefCell::new(HashSet::new()),
+            fn_hash: RwLock::new(HashMap::new()),
+            no_used_fn: RwLock::new(HashSet::new()),
             source: Vec::new(),
             root: Rc::new(RefCell::new(FunctionNode::new(root_fn_name, 0))),
             yaml_file_path: output_file_name,
@@ -100,13 +101,13 @@ impl Caller {
         let mut curr_fn_line: usize = 0;
         let mut called_counter: usize = 0;
         // まずはhashにあるかチェック
-        if self.no_used_fn.borrow().contains(&fn_name) {
+        if self.no_used_fn.read().unwrap().contains(&fn_name) {
             return;
         }
-        if self.fn_hash.borrow().contains_key(&fn_name) {
+        if self.fn_hash.read().unwrap().contains_key(&fn_name) {
             // hashのVecをすべて取り出して、callersに追加
             // hashには、その関数を呼び出してる関数の定義がある行番号が格納されている
-            for line in self.fn_hash.borrow().get(&fn_name).unwrap() {
+            for line in self.fn_hash.read().unwrap().get(&fn_name).unwrap() {
                 let fn_name = self.fn_name_of_designated_line(*line);
                 let mut fn_node_borrow = fn_node.borrow_mut();
                 let curr_depth = fn_node_borrow.curr_depth;
@@ -128,12 +129,12 @@ impl Caller {
                 println!("parent={}, child={}, depth={}", curr_fn, fn_name, curr_depth+1);
                 fn_node_borrow.add_caller(FunctionNode::new(curr_fn.clone(), curr_depth + 1));
                 // fn_hashに登録
-                self.fn_hash.borrow_mut().entry(fn_name.clone()).or_insert(Vec::new()).push(curr_fn_line);
+                self.fn_hash.write().unwrap().entry(fn_name.clone()).or_insert(Vec::new()).push(curr_fn_line);
                 called_counter += 1;
             }
         }
         if called_counter == 0 {
-            self.no_used_fn.borrow_mut().insert(fn_name);
+            self.no_used_fn.write().unwrap().insert(fn_name);
         }
 
     }
