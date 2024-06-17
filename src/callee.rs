@@ -165,14 +165,33 @@ impl Callee {
         // 子のノードに対しては,nameとcurr_depthだけ設定する
 
         let mut curr_line = line+1;
-        // line+1行目が"{"になっているか一応確認、なってたらline+1行目の括弧をfn_brackets_countに加算
-        if self.source[curr_line].trim() == "{" {
-            self.fn_brackets_count += 1;
-            curr_line += 1;
-        } else {
-            println!("line={} , {}() is not implemented in this source code",line, fn_node.borrow().name);
-            return;
+        // 関数定義の部分をスキップ
+        while curr_line < self.source.len() {
+            let trimmed_line = self.source[curr_line].trim();
+            if trimmed_line.starts_with("{") {
+                self.fn_brackets_count += 1;
+                curr_line += 1;
+                break;
+            } else if curr_line > 0 && self.source[curr_line - 1].trim().ends_with(")") {
+                let mut valid = true;
+                for line in &self.source[line..curr_line - 1] {
+                    let line_trimmed = line.trim();
+                    if line_trimmed.contains('(') || line_trimmed.contains(')') {
+                        valid = false;
+                        break;
+                    }
+                }
+                if valid {
+                    curr_line += 1;
+                } else {
+                    println!("line={} , {}() is not implemented in this source code", line, fn_node.borrow().name);
+                    return;
+                }
+            } else {
+                curr_line += 1;
+            }
         }
+        
         // curr_line行目から順番にfind_fn_call()を使用して関数呼び出しを探す
         // fn_brackets_countが0になるまで繰り返す,
         while self.fn_brackets_count > 0 {
