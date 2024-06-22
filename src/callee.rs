@@ -85,8 +85,6 @@ impl Callee {
                     is_param_line = true;
                     if line.ends_with(")") {
                         fin_param = true;
-                    }else if line.contains(")") && line.ends_with("{") {
-                        return true;
                     }
                 }
                 else {
@@ -144,7 +142,7 @@ impl Callee {
         }
         else {
             let mut no_def_fn = self.no_def_fn.borrow_mut();
-            println!("{} is not defined", fn_name_clone);
+            //println!("{} is not defined", fn_name_clone);
             no_def_fn.insert(fn_name_clone);
         }
     }
