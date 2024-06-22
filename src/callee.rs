@@ -122,6 +122,7 @@ impl Callee {
         }
         else {
             let mut no_def_fn = self.no_def_fn.borrow_mut();
+            println!("{} is not defined", fn_name_clone);
             no_def_fn.insert(fn_name_clone);
         }
     }
@@ -165,25 +166,15 @@ impl Callee {
         // 子のノードに対しては,nameとcurr_depthだけ設定する
 
         let mut curr_line = line+1;
-        let mut valid = false;
         // 関数定義の部分をスキップ
         while curr_line < self.source.len() {
             let trimmed_line = self.source[curr_line].trim();
             if trimmed_line.starts_with("{") {
                 self.fn_brackets_count += 1;
                 curr_line += 1;
-                valid = true;
-                break;
-            } else if self.source[curr_line].trim().ends_with(")") || self.source[curr_line].trim().ends_with(",") {
-                curr_line += 1;
-            } else {
                 break;
             }
-        }
-
-        if !valid {
-            println!("line={} , {}() is not implemented in this source code",line, fn_node.borrow().name);
-            return;
+            curr_line += 1;
         }
         
         // curr_line行目から順番にfind_fn_call()を使用して関数呼び出しを探す
