@@ -65,7 +65,7 @@ impl Callee {
 
     fn is_comment_line(&self, line: usize) -> bool {
         let line_content = self.source[line].trim();
-        if line_content.starts_with("//") || line_content.starts_with("/*") || line_content.starts_with("*") || line_content.ends_with("*/") {
+        if line_content.starts_with("//") || line_content.starts_with("/*") || line_content.starts_with("* ") || line_content.ends_with("*/") {
             return true;
         }
         false
@@ -152,11 +152,11 @@ impl Callee {
     fn is_fn_call_line(&self, line: usize) -> bool {
         let line_content = self.source[line].trim();
         // コメントのチェック
-        if line_content.starts_with("//") || line_content.starts_with("/*") ||line_content.starts_with("*") || line_content.ends_with("*/") {
+        if line_content.starts_with("//") || line_content.starts_with("/*") ||line_content.starts_with("* ") || line_content.ends_with("*/") {
             return false;
         }
         // 関数呼び出しの基本的なチェック
-        let re = Regex::new(r"\S\(").unwrap(); // 空白ではない文字の後に"("がくるパターン
+        let re = Regex::new(r"\b\w+\s*\(.*\)").unwrap(); // 空白ではない文字の後に"("がくるパターン
         if re.is_match(line_content) && line_content.contains(")") {
             return true;
         }
@@ -213,7 +213,6 @@ impl Callee {
             if line_content.contains("{") {
                 self.fn_brackets_count += line_content.matches("{").count();
             }
-    
             // 関数呼び出しのチェック
             let fn_names = self.find_fn_call(curr_line);
             if !fn_names.is_empty() {
