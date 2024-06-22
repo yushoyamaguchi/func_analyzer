@@ -63,31 +63,53 @@ impl Callee {
         false
     }
 
+    fn is_comment_line(&self, line: usize) -> bool {
+        let line_content = self.source[line].trim();
+        if line_content.starts_with("//") || line_content.starts_with("/*") || line_content.starts_with("*") || line_content.ends_with("*/") {
+            return true;
+        }
+        false
+    }
+
     fn is_function_definition(&self, index: usize, fn_name: &str) -> bool {
-        if index + 1 >= self.source.len() {
-            return false;
+        let mut line_num = index;
+        let mut is_param_line = false;
+        let mut fin_param = false;
+        while line_num<=self.source.len() {
+            let line = self.source[line_num].trim();
+            if !is_param_line {
+                if self.is_comment_line(line_num) {
+                    return false;
+                }
+                if self.fn_def_start_condition(fn_name, line) {
+                    is_param_line = true;
+                    if line.ends_with(")") {
+                        fin_param = true;
+                    }else if line.contains(")") && line.ends_with("{") {
+                        return true;
+                    }
+                }
+                else {
+                    return false;
+                }
+            }else if !fin_param {
+                if line.ends_with(",") {
+                    line_num += 1;
+                    continue;
+                }
+                if line.ends_with(")") {
+                    fin_param = true;
+                } else {
+                    return false;
+                }
+            }else{
+                if line == ("{") {
+                    return true;
+                }
+                return false;
+            }
+            line_num += 1;
         }
-
-        let current_line = self.source[index].trim();
-        if current_line.starts_with("//") || current_line.starts_with("/*") || current_line.starts_with("*") || current_line.ends_with("*/") {
-            return false;
-        }
-        let mut next_line = "";
-        if index + 1 < self.source.len() {
-            next_line = self.source[index + 1].trim();
-        }
-        let mut next_next_line = "";
-        if index + 2 < self.source.len() {
-            next_next_line = self.source[index + 2].trim();
-        }
-
-        if self.fn_def_start_condition(fn_name, current_line) && current_line.contains(")") && next_line == "{" {
-            return true;
-        }
-        if self.fn_def_start_condition(fn_name, current_line) && next_line.contains(")") && next_next_line == "{" {
-            return true;
-        }
-        
         false
     }
 
