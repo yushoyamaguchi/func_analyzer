@@ -6,7 +6,7 @@ run_test() {
   local EXPECTED_OUTPUT_FILE=$2
 
   # cargo run の実行
-  cargo run -- "$INPUT_FILE"
+  cargo run -- "$INPUT_FILE" > /dev/null 2>&1
 
   # 実際の出力をファイルから読み込む
   local OUTPUT_FILE="yaml_output/callee_graph.yaml"
@@ -27,4 +27,5 @@ run_test() {
 
 # テストを実行する
 run_test "ex_config_files/example_conf1.txt" "output_for_test/example_callee.yaml"
+run_test "ex_config_files/tcp_callee1.txt" "output_for_test/tcp_callee1.yaml"
 
